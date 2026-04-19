@@ -1,0 +1,84 @@
+--// CONFIGURACIÓN ----------------------------
+
+local loadingText = "Cargando juego..." -- 🔧 Cambia este texto fácilmente aquí
+local totalLoadTime = 300 -- ⏱️ Tiempo total en segundos (300 = 5 minutos)
+
+--// CREACIÓN DE GUI --------------------------
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LoadingScreen"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Fondo blanco
+local background = Instance.new("Frame")
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- Texto principal
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.Position = UDim2.new(0, 0, 0.35, 0) -- un poco arriba del centro
+title.BackgroundTransparency = 1
+title.Text = loadingText
+title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.Parent = background
+
+-- Barra (fondo)
+local barBackground = Instance.new("Frame")
+barBackground.Size = UDim2.new(0.6, 0, 0.05, 0)
+barBackground.Position = UDim2.new(0.2, 0, 0.55, 0)
+barBackground.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+barBackground.BorderSizePixel = 0
+barBackground.Parent = background
+
+-- Barra de progreso (roja)
+local bar = Instance.new("Frame")
+bar.Size = UDim2.new(0, 0, 1, 0) -- empieza en 0%
+bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+bar.BorderSizePixel = 0
+bar.Parent = barBackground
+
+-- Texto de porcentaje
+local percentText = Instance.new("TextLabel")
+percentText.Size = UDim2.new(1, 0, 0.05, 0)
+percentText.Position = UDim2.new(0, 0, 0.62, 0)
+percentText.BackgroundTransparency = 1
+percentText.Text = "0%"
+percentText.TextColor3 = Color3.fromRGB(0, 0, 0)
+percentText.TextScaled = true
+percentText.Font = Enum.Font.SourceSans
+percentText.Parent = background
+
+--// LÓGICA DE CARGA --------------------------
+
+local startTime = tick()
+
+while true do
+	local elapsed = tick() - startTime
+	local progress = math.clamp(elapsed / totalLoadTime, 0, 1)
+
+	-- Actualizar barra
+	bar.Size = UDim2.new(progress, 0, 1, 0)
+
+	-- Actualizar porcentaje
+	local percent = math.floor(progress * 100)
+	percentText.Text = percent .. "%"
+
+	-- Si llega al 100%, se queda ahí
+	if progress >= 1 then
+		bar.Size = UDim2.new(1, 0, 1, 0)
+		percentText.Text = "100%"
+		break
+	end
+
+	wait(0.05) -- suavidad de animación
+end
