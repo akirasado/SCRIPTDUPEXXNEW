@@ -1,151 +1,28 @@
-task.wait(1)
+task.wait(2) -- más tiempo para que el anti-cheat no lo detecte tan rápido
 
-local loadTime1 = 240  -- 4 minutos primera fase
-local loadTime2 = 240  -- 4 minutos segunda fase
-local stayTime = 600   -- 10 minutos extra que se queda visible
+local player = game.Players.LocalPlayer
+local pg = player:WaitForChild("PlayerGui")
 
-local musicLoading = "rbxassetid://1843529635"
-local musicInjecting = "rbxassetid://9129997143"
+local sg = Instance.new("ScreenGui")
+sg.ResetOnSpawn = false
+sg.IgnoreGuiInset = true
+sg.DisplayOrder = 10  -- más bajo que antes (importante)
+sg.Parent = pg
 
-local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
-local SoundService = game:GetService("SoundService")
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.4, 0, 0.3, 0)
+frame.Position = UDim2.new(0.3, 0, 0.35, 0)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 255)  -- azul para diferenciar
+frame.BorderSizePixel = 0
+frame.Parent = sg
 
-SoundService.Volume = 0
+local text = Instance.new("TextLabel")
+text.Size = UDim2.new(1,0,1,0)
+text.BackgroundTransparency = 1
+text.Text = "TEST EN STEAL A BRAINROT\nSi ves esto azul → funciona"
+text.TextColor3 = Color3.fromRGB(255,255,255)
+text.TextScaled = true
+text.Font = Enum.Font.GothamBold
+text.Parent = frame
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.IgnoreGuiInset = true
-screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999999
-screenGui.Parent = playerGui
-
-local background = Instance.new("Frame")
-background.Size = UDim2.new(1,0,1,0)
-background.BackgroundColor3 = Color3.fromRGB(0,0,0)
-background.Parent = screenGui
-
-local blur = Instance.new("BlurEffect")
-blur.Size = 18
-blur.Parent = Lighting
-
--- Nebulosas y estrellas ligeras (solo lo necesario)
-local function crearNebulosa(c1,c2,t,vel)
-	local n = Instance.new("Frame")
-	n.Size = UDim2.new(1.6,0,1.6,0)
-	n.Position = UDim2.new(-0.3,0,-0.3,0)
-	n.BackgroundTransparency = 1
-	n.Parent = background
-
-	local g = Instance.new("UIGradient")
-	g.Color = ColorSequence.new{c1,c2}
-	g.Transparency = NumberSequence.new{t,1}
-	g.Rotation = math.random(0,360)
-	g.Parent = n
-
-	local ti = TweenInfo.new(vel, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
-	task.spawn(function()
-		while n and n.Parent do
-			local pos = UDim2.new(math.random(-35,-10)/100,0,math.random(-35,-10)/100,0)
-			TweenService:Create(n, ti, {Position = pos}):Play()
-			task.wait(vel*0.7)
-		end
-	end)
-end
-
-crearNebulosa(Color3.fromRGB(55,0,110), Color3.fromRGB(0,95,145), 0.4, 55)
-crearNebulosa(Color3.fromRGB(15,45,115), Color3.fromRGB(85,0,135), 0.5, 72)
-
--- Solo 20 estrellas
-for i = 1,20 do
-	local s = Instance.new("Frame")
-	s.Size = UDim2.new(0,math.random(2,4),0,math.random(2,4))
-	s.Position = UDim2.new(math.random(),0,math.random(),0)
-	s.BackgroundColor3 = Color3.fromRGB(200,210,255)
-	s.Parent = background
-	local ti = TweenInfo.new(math.random(2,5), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1)
-	task.spawn(function()
-		while s and s.Parent do
-			TweenService:Create(s, ti, {BackgroundTransparency = math.random(20,80)/100}):Play()
-			task.wait(math.random(2,5))
-		end
-	end)
-end
-
--- Resto del script (texto, barra, música, etc.)
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0.2,0)
-title.Position = UDim2.new(0,0,0.34,0)
-title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(170,0,255)
-title.TextScaled = true
-title.Font = Enum.Font.SourceSansBold
-title.Text = ""
-title.Parent = background
-
-local function typeText(lbl, txt)
-	lbl.Text = ""
-	for i = 1, #txt do
-		lbl.Text = string.sub(txt,1,i)
-		task.wait(0.06)
-	end
-end
-
--- Barra
-local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0.68,0,0.06,0)
-barBg.Position = UDim2.new(0.16,0,0.53,0)
-barBg.BackgroundColor3 = Color3.fromRGB(35,35,65)
-barBg.Parent = background
-
-local bar = Instance.new("Frame")
-bar.Size = UDim2.new(0,0,1,0)
-bar.BackgroundColor3 = Color3.fromRGB(255,0,0)
-bar.Parent = barBg
-
-local percent = Instance.new("TextLabel")
-percent.Size = UDim2.new(1,0,0.06,0)
-percent.Position = UDim2.new(0,0,0.61,0)
-percent.BackgroundTransparency = 1
-percent.TextColor3 = Color3.fromRGB(200,200,255)
-percent.TextScaled = true
-percent.Text = "0%"
-percent.Parent = background
-
-local sound = Instance.new("Sound")
-sound.SoundId = musicLoading
-sound.Looped = true
-sound.Volume = 1
-sound.Parent = background
-sound:Play()
-
-local function runLoading(time, color)
-	local start = tick()
-	bar.BackgroundColor3 = color
-	while true do
-		local p = math.clamp((tick()-start)/time, 0, 1)
-		bar.Size = UDim2.new(p,0,1,0)
-		percent.Text = math.floor(p*100).."%"
-		if p >= 1 then break end
-		task.wait(0.05)
-	end
-end
-
-typeText(title, "LOADING DUPEXX GALATIC SCRIPT")
-runLoading(loadTime1, Color3.fromRGB(255,40,40))
-
-bar.Size = UDim2.new(0,0,1,0)
-
-typeText(title, "INJECTING DUPEXX GALACTIC SCRIPT")
-
-sound:Stop()
-sound.SoundId = musicInjecting
-sound:Play()
-
-runLoading(loadTime2, Color3.fromRGB(40,255,80))
-
-title.Text = "DUPEXX GALACTIC SCRIPT INJECTED SUCCESSFULLY"
-percent.Text = "100%"
-
-task.wait(stayTime)  -- se queda 10 minutos más
--- screenGui:Destroy()   -- descomenta si quieres que se cierre sola
+print("Script de prueba ejecutado en Steal a Brainrot")
