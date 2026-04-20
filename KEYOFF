@@ -3,7 +3,7 @@ local loadingText1 = "LOADING DUPEXX GALATIC SCRIPT"
 local loadingText2 = "INJECTING DUPEXX GALACTIC SCRIPT"
 local loadTime1 = 300
 local loadTime2 = 180
-local typingSpeed = 0.03
+local typingSpeed = 0.035
 
 --// SERVICES
 local player = game.Players.LocalPlayer
@@ -19,26 +19,74 @@ local bg = Instance.new("Frame", gui)
 bg.Size = UDim2.fromScale(1,1)
 bg.BackgroundColor3 = Color3.new(0,0,0)
 
-Instance.new("BlurEffect", Lighting).Size = 10
+Instance.new("BlurEffect", Lighting).Size = 15
 
 --==================================================
--- 🌫️ NEBULOSA
+-- 🌫️ NEBULOSAS
 --==================================================
 
-local neb = Instance.new("Frame", bg)
-neb.Size = UDim2.fromScale(1.5,1.5)
-neb.Position = UDim2.fromScale(-0.25,-0.25)
-neb.BackgroundTransparency = 1
+local function createNebula(color)
+	local n = Instance.new("Frame", bg)
+	n.Size = UDim2.fromScale(1.5,1.5)
+	n.Position = UDim2.fromScale(-0.25,-0.25)
+	n.BackgroundTransparency = 1
 
-local gradNeb = Instance.new("UIGradient", neb)
-gradNeb.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(0,100,255)),
-	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
-}
-gradNeb.Transparency = NumberSequence.new{
-	NumberSequenceKeypoint.new(0,0.9),
-	NumberSequenceKeypoint.new(1,1)
-}
+	local g = Instance.new("UIGradient", n)
+	g.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0,color),
+		ColorSequenceKeypoint.new(1,Color3.new(0,0,0))
+	}
+	g.Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0,0.9),
+		NumberSequenceKeypoint.new(1,1)
+	}
+
+	task.spawn(function()
+		while true do
+			TweenService:Create(n, TweenInfo.new(80, Enum.EasingStyle.Linear), {
+				Rotation = n.Rotation + 180
+			}):Play()
+			task.wait(80)
+		end
+	end)
+end
+
+createNebula(Color3.fromRGB(0,100,255))
+createNebula(Color3.fromRGB(255,50,50))
+
+--==================================================
+-- 🌌 GALAXIA
+--==================================================
+
+local galaxy = Instance.new("Frame", bg)
+galaxy.Size = UDim2.fromOffset(220,220)
+galaxy.Position = UDim2.fromScale(0.75,0.25)
+galaxy.AnchorPoint = Vector2.new(0.5,0.5)
+galaxy.BackgroundTransparency = 1
+
+for arm = 0,1 do
+	for i = 1,120 do
+		local star = Instance.new("Frame", galaxy)
+
+		local t = i/15
+		local angle = t + (arm*math.pi)
+		local radius = t*5
+		local noise = (math.random()-0.5)*2
+
+		local x = math.cos(angle)*(radius+noise)
+		local y = math.sin(angle)*(radius+noise)
+
+		star.Size = UDim2.fromOffset(2,2)
+		star.Position = UDim2.new(0.5,x,0.5,y)
+		star.BackgroundColor3 = Color3.fromRGB(180,180,255)
+		star.BackgroundTransparency = 0.4
+		star.BorderSizePixel = 0
+	end
+end
+
+RunService.RenderStepped:Connect(function(dt)
+	galaxy.Rotation += dt*2
+end)
 
 --==================================================
 -- ⭐ ESTRELLAS
@@ -46,40 +94,34 @@ gradNeb.Transparency = NumberSequence.new{
 
 local stars = {}
 
-for i = 1,60 do
+for i = 1,80 do
 	local s = Instance.new("Frame", bg)
-	s.Size = UDim2.fromOffset(3,3)
-	s.Position = UDim2.fromScale(math.random(), math.random())
+	s.Size = UDim2.fromOffset(math.random(2,4),math.random(2,4))
+	s.Position = UDim2.fromScale(math.random(),math.random())
 	s.BackgroundColor3 = Color3.fromRGB(200,200,255)
+	s.BackgroundTransparency = math.random(4,8)/10
 	s.BorderSizePixel = 0
-
-	stars[i] = {
-		frame = s,
-		timer = math.random()
-	}
+	table.insert(stars, s)
 end
 
---==================================================
--- 🌌 GALAXIA
---==================================================
+task.spawn(function()
+	while true do
+		for _,s in ipairs(stars) do
+			TweenService:Create(s, TweenInfo.new(0.6), {
+				BackgroundTransparency = 1
+			}):Play()
 
-local galaxy = Instance.new("Frame", bg)
-galaxy.Size = UDim2.fromOffset(200,200)
-galaxy.Position = UDim2.fromScale(0.75,0.25)
-galaxy.AnchorPoint = Vector2.new(0.5,0.5)
-galaxy.BackgroundTransparency = 1
+			task.wait(0.6)
 
-for i = 1,120 do
-	local p = Instance.new("Frame", galaxy)
-	local t = i/12
-	local a = t
+			s.Position = UDim2.fromScale(math.random(), math.random())
 
-	p.Size = UDim2.fromOffset(2,2)
-	p.Position = UDim2.new(0.5, math.cos(a)*t*5, 0.5, math.sin(a)*t*5)
-	p.BackgroundColor3 = Color3.fromRGB(180,180,255)
-	p.BackgroundTransparency = 0.4
-	p.BorderSizePixel = 0
-end
+			TweenService:Create(s, TweenInfo.new(0.7), {
+				BackgroundTransparency = math.random(30,80)/100
+			}):Play()
+		end
+		task.wait(0.4)
+	end
+end)
 
 --==================================================
 -- 🕳️ AGUJERO NEGRO
@@ -123,28 +165,25 @@ core.BackgroundColor3 = Color3.new(0,0,0)
 Instance.new("UICorner", core)
 
 --==================================================
--- 💥 JETS DEL AGUJERO NEGRO (CADA 30s)
+-- 💥 JETS (AMBOS POLOS)
 --==================================================
 
 local lastBurst = 0
 local BURST_INTERVAL = 30
 
-local function spawnBurst()
-	local burstFolder = Instance.new("Folder", bh)
+local function spawnJet(direction)
+	local folder = Instance.new("Folder", bh)
 
-	local count = 14
-	local dir = (math.random(0,1) == 0) and -1 or 1
-
-	for i = 1, count do
+	for i = 1,14 do
 		local part = Instance.new("Frame")
 		part.Size = UDim2.fromOffset(3,3)
 		part.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		part.BorderSizePixel = 0
 		part.Position = UDim2.fromOffset(center.X, center.Y)
-		part.Parent = burstFolder
+		part.Parent = folder
 
-		local spreadX = (math.random()-0.5) * 20
-		local speedY = math.random(50,80)/10 * dir
+		local spreadX = (math.random()-0.5)*20
+		local speedY = math.random(50,80)/10 * direction
 
 		task.spawn(function()
 			local life = 0
@@ -154,7 +193,7 @@ local function spawnBurst()
 				local x = center.X + spreadX * life
 				local y = center.Y + speedY * life * 20
 
-				part.Position = UDim2.fromOffset(x, y)
+				part.Position = UDim2.fromOffset(x,y)
 				part.BackgroundTransparency = life
 
 				task.wait()
@@ -164,8 +203,69 @@ local function spawnBurst()
 	end
 
 	task.delay(2, function()
-		burstFolder:Destroy()
+		folder:Destroy()
 	end)
+end
+
+local function spawnBurst()
+	spawnJet(1)
+	spawnJet(-1)
+end
+
+--==================================================
+-- 📊 BARRA CON EFECTOS
+--==================================================
+
+local barBg = Instance.new("Frame", bg)
+barBg.Size = UDim2.fromScale(0.6,0.05)
+barBg.Position = UDim2.fromScale(0.2,0.55)
+barBg.BackgroundColor3 = Color3.fromRGB(40,40,70)
+Instance.new("UICorner", barBg).CornerRadius = UDim.new(1,0)
+
+local bar = Instance.new("Frame", barBg)
+bar.Size = UDim2.new(0,0,1,0)
+Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
+
+local gradient = Instance.new("UIGradient", bar)
+
+local shine = Instance.new("Frame", bar)
+shine.Size = UDim2.fromScale(0.2,1)
+shine.BackgroundColor3 = Color3.fromRGB(255,255,255)
+shine.BackgroundTransparency = 0.8
+shine.BorderSizePixel = 0
+Instance.new("UICorner", shine).CornerRadius = UDim.new(1,0)
+
+task.spawn(function()
+	while true do
+		shine.Position = UDim2.fromScale(0,0)
+		TweenService:Create(shine, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {
+			Position = UDim2.fromScale(0.8,0)
+		}):Play()
+		task.wait(1.2)
+	end
+end)
+
+local percent = Instance.new("TextLabel", bg)
+percent.Size = UDim2.fromScale(1,0.05)
+percent.Position = UDim2.fromScale(0,0.62)
+percent.BackgroundTransparency = 1
+percent.TextScaled = true
+percent.TextColor3 = Color3.fromRGB(180,180,255)
+
+local function runLoading(duration, c1, c2)
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0,c1),
+		ColorSequenceKeypoint.new(1,c2)
+	}
+
+	local start = os.clock()
+	while true do
+		local p = math.clamp((os.clock()-start)/duration,0,1)
+		bar.Size = UDim2.new(p,0,1,0)
+		percent.Text = math.floor(p*100).."%"
+		if p >= 1 then break end
+		task.wait()
+	end
 end
 
 --==================================================
@@ -182,66 +282,18 @@ title.Font = Enum.Font.SourceSansBold
 
 local function typeText(text)
 	title.Text = ""
-	for i = 1, #text do
+	for i = 1,#text do
 		title.Text = text:sub(1,i)
 		task.wait(typingSpeed)
 	end
 end
 
 --==================================================
--- 📊 BARRA
---==================================================
-
-local barBg = Instance.new("Frame", bg)
-barBg.Size = UDim2.fromScale(0.6,0.05)
-barBg.Position = UDim2.fromScale(0.2,0.55)
-barBg.BackgroundColor3 = Color3.fromRGB(40,40,70)
-Instance.new("UICorner", barBg)
-
-local bar = Instance.new("Frame", barBg)
-bar.Size = UDim2.new(0,0,1,0)
-Instance.new("UICorner", bar)
-
-local percent = Instance.new("TextLabel", bg)
-percent.Size = UDim2.fromScale(1,0.05)
-percent.Position = UDim2.fromScale(0,0.62)
-percent.BackgroundTransparency = 1
-percent.TextScaled = true
-percent.TextColor3 = Color3.fromRGB(180,180,255)
-
-local function runLoading(duration)
-	local start = os.clock()
-	while true do
-		local p = math.clamp((os.clock()-start)/duration,0,1)
-		bar.Size = UDim2.new(p,0,1,0)
-		percent.Text = math.floor(p*100).."%"
-		if p >= 1 then break end
-		task.wait()
-	end
-end
-
---==================================================
--- 🎯 LOOP PRINCIPAL
+-- LOOP
 --==================================================
 
 RunService.RenderStepped:Connect(function(dt)
 
-	-- galaxia
-	galaxy.Rotation += dt*2
-
-	-- estrellas
-	for _,s in ipairs(stars) do
-		s.timer += dt
-
-		if s.timer > 2 then
-			s.timer = 0
-			s.frame.Position = UDim2.fromScale(math.random(), math.random())
-		end
-
-		s.frame.BackgroundTransparency = 0.5 + math.sin(s.timer*2)*0.3
-	end
-
-	-- agujero negro
 	for _,p in ipairs(particles) do
 		p.angle += p.speed
 
@@ -256,7 +308,6 @@ RunService.RenderStepped:Connect(function(dt)
 		p.frame.Position = UDim2.fromOffset(x, y + curve)
 	end
 
-	-- jets
 	lastBurst += dt
 	if lastBurst >= BURST_INTERVAL then
 		lastBurst = 0
@@ -265,13 +316,13 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
--- 🚀 EJECUCIÓN
+-- EJECUCIÓN
 --==================================================
 
 typeText(loadingText1)
-runLoading(loadTime1)
+runLoading(loadTime1, Color3.fromRGB(255,0,0), Color3.fromRGB(255,80,80))
 
 bar.Size = UDim2.new(0,0,1,0)
 
 typeText(loadingText2)
-runLoading(loadTime2)
+runLoading(loadTime2, Color3.fromRGB(0,255,100), Color3.fromRGB(0,150,80))
