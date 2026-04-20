@@ -1,28 +1,59 @@
-task.wait(2) -- más tiempo para que el anti-cheat no lo detecte tan rápido
+task.wait(3)
 
-local player = game.Players.LocalPlayer
-local pg = player:WaitForChild("PlayerGui")
+local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-local sg = Instance.new("ScreenGui")
-sg.ResetOnSpawn = false
-sg.IgnoreGuiInset = true
-sg.DisplayOrder = 10  -- más bajo que antes (importante)
-sg.Parent = pg
+local screenGui = Instance.new("ScreenGui")
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 5   -- bajo para evitar detección
+screenGui.Parent = playerGui
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0.4, 0, 0.3, 0)
-frame.Position = UDim2.new(0.3, 0, 0.35, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 255)  -- azul para diferenciar
-frame.BorderSizePixel = 0
-frame.Parent = sg
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1,0,1,0)
+bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
+bg.Parent = screenGui
 
-local text = Instance.new("TextLabel")
-text.Size = UDim2.new(1,0,1,0)
-text.BackgroundTransparency = 1
-text.Text = "TEST EN STEAL A BRAINROT\nSi ves esto azul → funciona"
-text.TextColor3 = Color3.fromRGB(255,255,255)
-text.TextScaled = true
-text.Font = Enum.Font.GothamBold
-text.Parent = frame
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0.2,0)
+title.Position = UDim2.new(0,0,0.4,0)
+title.BackgroundTransparency = 1
+title.Text = "LOADING DUPEXX GALATIC SCRIPT..."
+title.TextColor3 = Color3.fromRGB(170,0,255)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.Parent = bg
 
-print("Script de prueba ejecutado en Steal a Brainrot")
+local barBg = Instance.new("Frame")
+barBg.Size = UDim2.new(0.6,0,0.05,0)
+barBg.Position = UDim2.new(0.2,0,0.55,0)
+barBg.BackgroundColor3 = Color3.fromRGB(40,40,70)
+barBg.Parent = bg
+
+local bar = Instance.new("Frame")
+bar.Size = UDim2.new(0,0,1,0)
+bar.BackgroundColor3 = Color3.fromRGB(255,0,0)
+bar.Parent = barBg
+
+local percent = Instance.new("TextLabel")
+percent.Size = UDim2.new(1,0,0.06,0)
+percent.Position = UDim2.new(0,0,0.62,0)
+percent.BackgroundTransparency = 1
+percent.Text = "0%"
+percent.TextColor3 = Color3.fromRGB(255,255,255)
+percent.TextScaled = true
+percent.Parent = bg
+
+-- Loading simple de 8 minutos
+local start = tick()
+local total = 480
+
+while true do
+	local p = math.clamp((tick() - start) / total, 0, 1)
+	bar.Size = UDim2.new(p, 0, 1, 0)
+	percent.Text = math.floor(p*100) .. "%"
+	if p >= 1 then break end
+	task.wait(0.1)
+end
+
+title.Text = "INJECTED SUCCESSFULLY"
+percent.Text = "100%"
