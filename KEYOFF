@@ -23,7 +23,7 @@ bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
 Instance.new("BlurEffect", Lighting).Size = 15
 
 --==================================================
--- 🌌 NEBULOSAS SUAVES
+-- 🌫️ NEBULOSAS SUAVES
 --==================================================
 
 local function createNebula(color)
@@ -56,7 +56,7 @@ createNebula(Color3.fromRGB(0,100,255))
 createNebula(Color3.fromRGB(255,50,50))
 
 --==================================================
--- 🌌 GALAXIA (NO TOCAR, YA PERFECTA)
+-- 🌌 GALAXIA (NO TOCAR)
 --==================================================
 
 local galaxy = Instance.new("Frame", bg)
@@ -90,158 +90,36 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
--- 🕳️ AGUJERO NEGRO LATERAL (INTERSTELLAR OPTIMIZADO)
---==================================================
-
-local blackHole = Instance.new("Frame", bg)
-blackHole.Size = UDim2.fromOffset(120,120)
-blackHole.Position = UDim2.fromScale(0.35,0.72)
-blackHole.AnchorPoint = Vector2.new(0.5,0.5)
-blackHole.BackgroundTransparency = 1
-
-local center = Vector2.new(60,60)
-
--- 🔻 MENOS PARTÍCULAS (optimización)
-local TOTAL = 90
-
-local front = {} -- parte visible abajo
-local back = {}  -- parte que "pasa arriba"
-
-local function createParticle(parentTable, isFront)
-	for i = 1, TOTAL/2 do
-		local p = Instance.new("Frame")
-		p.Size = UDim2.fromOffset(3,3) -- 🔺 más grandes
-		p.BorderSizePixel = 0
-		p.Parent = blackHole
-
-		local angle = math.random() * math.pi * 2
-		local radius = math.random(25,55)
-
-		-- colores realistas
-		local r = math.random()
-		if r < 0.2 then
-			p.BackgroundColor3 = Color3.fromRGB(255,255,255)
-		elseif r < 0.4 then
-			p.BackgroundColor3 = Color3.fromRGB(255,200,120)
-		elseif r < 0.7 then
-			p.BackgroundColor3 = Color3.fromRGB(120,80,255)
-		else
-			p.BackgroundColor3 = Color3.fromRGB(80,120,255)
-		end
-
-		table.insert(parentTable, {
-			frame = p,
-			angle = angle,
-			radius = radius,
-			speed = math.random(3,8)/100 -- 🔻 más lento
-		})
-	end
-end
-
-createParticle(front, true)
-createParticle(back, false)
-
--- 🖤 NÚCLEO
-local core = Instance.new("Frame", blackHole)
-core.Size = UDim2.fromOffset(32,32)
-core.Position = UDim2.fromOffset(center.X, center.Y)
-core.AnchorPoint = Vector2.new(0.5,0.5)
-core.BackgroundColor3 = Color3.fromRGB(0,0,0)
-core.BorderSizePixel = 0
-Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
-
--- 🌪️ ANIMACIÓN (CLAVE)
-RunService.RenderStepped:Connect(function()
-	for _,p in ipairs(particles) do
-		p.angle += p.speed
-
-		local sin = math.sin(p.angle)
-		local cos = math.cos(p.angle)
-
-		-- órbita elíptica (vista lateral)
-		local x = center.X + cos * p.radius
-		local y = center.Y + sin * (p.radius * 0.35)
-
-		-- efecto curvatura simple (cuando va atrás)
-		if sin < 0 then
-			y -= 8 -- sube un poco
-		end
-
-		p.frame.Position = UDim2.fromOffset(x, y)
-	end
-end)
-
-	-- 🔵 PARTE TRASERA (arriba)
-	for _,p in ipairs(back) do
-		p.angle += p.speed
-
-		-- perspectiva elíptica (vista lateral)
-		local x = center.X + math.cos(p.angle) * p.radius
-		local y = center.Y + math.sin(p.angle) * (p.radius * 0.35)
-
-		-- SOLO parte superior
-		if math.sin(p.angle) < 0 then
-			p.frame.Visible = true
-			p.frame.Position = UDim2.fromOffset(x,y)
-		else
-			p.frame.Visible = false
-		end
-	end
-
-	-- 🔵 PARTE FRONTAL (abajo)
-	for _,p in ipairs(front) do
-		p.angle += p.speed
-
-		local x = center.X + math.cos(p.angle) * p.radius
-		local y = center.Y + math.sin(p.angle) * (p.radius * 0.35)
-
-		-- SOLO parte inferior
-		if math.sin(p.angle) >= 0 then
-			p.frame.Visible = true
-			p.frame.Position = UDim2.fromOffset(x,y)
-		else
-			p.frame.Visible = false
-		end
-	end
-end)
-
---==================================================
--- ⭐ ESTRELLAS (DESAPARECER → MOVER → APARECER)
+-- ⭐ ESTRELLAS (fade + reposición suave)
 --==================================================
 
 local stars = {}
 
 for i = 1,70 do
 	local s = Instance.new("Frame", bg)
-
 	s.Size = UDim2.fromOffset(math.random(2,4),math.random(2,4))
 	s.Position = UDim2.fromScale(math.random(),math.random())
 	s.BackgroundColor3 = Color3.fromRGB(200,200,255)
 	s.BackgroundTransparency = math.random(4,8)/10
 	s.BorderSizePixel = 0
-
 	table.insert(stars, s)
 end
 
 task.spawn(function()
 	while true do
 		for _,s in ipairs(stars) do
-			-- Fade OUT (más lento)
 			TweenService:Create(s, TweenInfo.new(0.6), {
 				BackgroundTransparency = 1
 			}):Play()
 
 			task.wait(0.6)
 
-			-- Nueva posición
 			s.Position = UDim2.fromScale(math.random(), math.random())
 
-			-- Fade IN (más suave)
 			TweenService:Create(s, TweenInfo.new(0.7), {
 				BackgroundTransparency = math.random(30,80)/100
 			}):Play()
 		end
-
 		task.wait(0.3)
 	end
 end)
@@ -281,7 +159,7 @@ local function typeText(label,text)
 end
 
 --==================================================
--- 📊 BARRA (LOADING CON PERSONALIDAD)
+-- 📊 BARRA
 --==================================================
 
 local barBg = Instance.new("Frame", bg)
@@ -296,7 +174,6 @@ Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
 
 local gradient = Instance.new("UIGradient", bar)
 
--- brillo
 local shine = Instance.new("Frame", bar)
 shine.Size = UDim2.fromScale(0.15,1)
 shine.BackgroundColor3 = Color3.fromRGB(255,255,255)
@@ -307,11 +184,9 @@ Instance.new("UICorner", shine).CornerRadius = UDim.new(1,0)
 task.spawn(function()
 	while true do
 		shine.Position = UDim2.fromScale(0,0)
-
 		TweenService:Create(shine, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {
 			Position = UDim2.fromScale(0.85,0)
 		}):Play()
-
 		task.wait(1.2)
 	end
 end)
@@ -324,7 +199,6 @@ percent.TextColor3 = Color3.fromRGB(180,180,255)
 percent.TextScaled = true
 percent.Text = "0%"
 
--- loading con personalidad (rojo)
 local function runLoading(duration, c1, c2)
 	gradient.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0,c1),
@@ -335,14 +209,75 @@ local function runLoading(duration, c1, c2)
 
 	while true do
 		local p = math.clamp((tick()-start)/duration,0,1)
-
 		bar.Size = UDim2.new(p,0,1,0)
 		percent.Text = math.floor(p*100).."%"
-
 		if p >= 1 then break end
 		task.wait()
 	end
 end
+
+--==================================================
+-- 🕳️ AGUJERO NEGRO (LATERAL SIMPLE Y REALISTA)
+--==================================================
+
+local blackHole = Instance.new("Frame", bg)
+blackHole.Size = UDim2.fromOffset(120,120)
+blackHole.Position = UDim2.fromScale(0.35,0.72)
+blackHole.AnchorPoint = Vector2.new(0.5,0.5)
+blackHole.BackgroundTransparency = 1
+
+local center = Vector2.new(60,60)
+local particles = {}
+
+for i = 1,80 do
+	local p = Instance.new("Frame", blackHole)
+	p.Size = UDim2.fromOffset(3,3)
+	p.BorderSizePixel = 0
+
+	local r = math.random()
+	if r < 0.2 then
+		p.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	elseif r < 0.4 then
+		p.BackgroundColor3 = Color3.fromRGB(255,200,120)
+	elseif r < 0.7 then
+		p.BackgroundColor3 = Color3.fromRGB(120,80,255)
+	else
+		p.BackgroundColor3 = Color3.fromRGB(80,120,255)
+	end
+
+	table.insert(particles,{
+		frame = p,
+		angle = math.random()*math.pi*2,
+		radius = math.random(25,55),
+		speed = math.random(3,8)/100
+	})
+end
+
+local core = Instance.new("Frame", blackHole)
+core.Size = UDim2.fromOffset(30,30)
+core.Position = UDim2.fromOffset(center.X, center.Y)
+core.AnchorPoint = Vector2.new(0.5,0.5)
+core.BackgroundColor3 = Color3.fromRGB(0,0,0)
+core.BorderSizePixel = 0
+Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
+
+RunService.RenderStepped:Connect(function()
+	for _,p in ipairs(particles) do
+		p.angle += p.speed
+
+		local sin = math.sin(p.angle)
+		local cos = math.cos(p.angle)
+
+		local x = center.X + cos * p.radius
+		local y = center.Y + sin * (p.radius * 0.35)
+
+		if sin < 0 then
+			y -= 8
+		end
+
+		p.frame.Position = UDim2.fromOffset(x,y)
+	end
+end)
 
 --==================================================
 -- 🚀 EJECUCIÓN
