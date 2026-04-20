@@ -1,6 +1,8 @@
-task.wait(4)
+task.wait(3)
 
 local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
@@ -13,22 +15,70 @@ bg.Size = UDim2.new(1, 0, 1, 0)
 bg.BackgroundColor3 = Color3.fromRGB(8, 2, 25)
 bg.Parent = screenGui
 
--- TEXTO SIMPLE
+-- Borde neon bonito
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(140, 0, 255)
+stroke.Thickness = 8
+stroke.Transparency = 0.25
+stroke.Parent = bg
+
+-- Blur
+local blur = Instance.new("BlurEffect")
+blur.Size = 22
+blur.Parent = Lighting
+
+-- === NEBULOSAS (lo más bonito) ===
+local function crearNebulosa(c1, c2, vel)
+	local neb = Instance.new("Frame")
+	neb.Size = UDim2.new(1.95, 0, 1.95, 0)
+	neb.Position = UDim2.new(-0.48, 0, -0.48, 0)
+	neb.BackgroundTransparency = 1
+	neb.Parent = bg
+
+	local grad = Instance.new("UIGradient")
+	grad.Color = ColorSequence.new{c1, c2}
+	grad.Transparency = NumberSequence.new{0.3, 1}
+	grad.Rotation = math.random(0, 360)
+	grad.Parent = neb
+
+	local ti = TweenInfo.new(vel, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
+	
+	task.spawn(function()
+		while neb and neb.Parent do
+			local pos = UDim2.new(math.random(-45, -6)/100, 0, math.random(-45, -6)/100, 0)
+			TweenService:Create(neb, ti, {Position = pos}):Play()
+			task.wait(vel * 0.78)
+		end
+	end)
+end
+
+crearNebulosa(Color3.fromRGB(85, 0, 155), Color3.fromRGB(0, 135, 195), 62)
+crearNebulosa(Color3.fromRGB(45, 10, 135), Color3.fromRGB(110, 0, 205), 88)
+
+-- Texto
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0.3, 0)
-title.Position = UDim2.new(0, 0, 0.25, 0)
+title.Size = UDim2.new(1, 0, 0.25, 0)
+title.Position = UDim2.new(0, 0, 0.30, 0)
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(210, 50, 255)
+title.TextColor3 = Color3.fromRGB(205, 50, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBlack
-title.Text = "LOADING DUPEXX GALATIC SCRIPT..."
+title.Text = ""
 title.Parent = bg
 
--- BARRA SIMPLE
+local function typeText(label, text)
+	label.Text = ""
+	for i = 1, #text do
+		label.Text = string.sub(text, 1, i)
+		task.wait(0.055)
+	end
+end
+
+-- Barra
 local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0.75, 0, 0.08, 0)
-barBg.Position = UDim2.new(0.125, 0, 0.55, 0)
-barBg.BackgroundColor3 = Color3.fromRGB(40, 30, 75)
+barBg.Size = UDim2.new(0.7, 0, 0.08, 0)
+barBg.Position = UDim2.new(0.15, 0, 0.53, 0)
+barBg.BackgroundColor3 = Color3.fromRGB(35, 28, 75)
 barBg.Parent = bg
 
 local bar = Instance.new("Frame")
@@ -36,11 +86,16 @@ bar.Size = UDim2.new(0, 0, 1, 0)
 bar.BackgroundColor3 = Color3.fromRGB(255, 70, 190)
 bar.Parent = barBg
 
+local glow = Instance.new("UIStroke")
+glow.Color = Color3.fromRGB(255, 150, 255)
+glow.Thickness = 6
+glow.Parent = bar
+
 local percent = Instance.new("TextLabel")
-percent.Size = UDim2.new(1, 0, 0.12, 0)
-percent.Position = UDim2.new(0, 0, 0.68, 0)
+percent.Size = UDim2.new(1, 0, 0.1, 0)
+percent.Position = UDim2.new(0, 0, 0.66, 0)
 percent.BackgroundTransparency = 1
-percent.TextColor3 = Color3.fromRGB(255, 255, 255)
+percent.TextColor3 = Color3.fromRGB(230, 230, 255)
 percent.TextScaled = true
 percent.Text = "0%"
 percent.Parent = bg
@@ -53,37 +108,9 @@ sound.Volume = 0.9
 sound.Parent = bg
 sound:Play()
 
-print("Script cargado - Debería verse texto y barra")
-
--- Barra de carga simple (8 minutos)
-local startTime = tick()
-local totalTime = 480
-
-while true do
-	local progress = math.clamp((tick() - startTime) / totalTime, 0, 1)
-	bar.Size = UDim2.new(progress, 0, 1, 0)
-	percent.Text = math.floor(progress * 100) .. "%"
-	
-	if progress >= 1 then break end
-	task.wait(0.1)
-end
-
-title.Text = "INJECTING DUPEXX GALACTIC SCRIPT"
-sound.SoundId = "rbxassetid://9129997143"
-sound:Play()
-
--- Segunda fase
-startTime = tick()
-totalTime = 180
-
-while true do
-	local progress = math.clamp((tick() - startTime) / totalTime, 0, 1)
-	bar.Size = UDim2.new(progress, 0, 1, 0)
-	percent.Text = math.floor(progress * 100) .. "%"
-	
-	if progress >= 1 then break end
-	task.wait(0.1)
-end
-
-title.Text = "DUPEXX GALACTIC SCRIPT INJECTED SUCCESSFULLY"
-percent.Text = "100%"
+local function runLoading(duration, color)
+	local start = tick()
+	bar.BackgroundColor3 = color
+	glow.Color = color
+	while true do
+		local
