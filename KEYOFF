@@ -90,87 +90,77 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
--- 🕳️ AGUJERO NEGRO REALISTA (FLUIDO INTERSTELLAR)
+-- 🕳️ AGUJERO NEGRO REALISTA (SIN CUADRADOS)
 --==================================================
 
 local blackHole = Instance.new("Frame", bg)
-blackHole.Size = UDim2.fromOffset(85,85)
-blackHole.Position = UDim2.fromScale(0.34,0.72)
+blackHole.Size = UDim2.fromOffset(80,80)
+blackHole.Position = UDim2.fromScale(0.35,0.72)
 blackHole.AnchorPoint = Vector2.new(0.5,0.5)
 blackHole.BackgroundTransparency = 1
 
--- 🖤 NÚCLEO
+-- 🖤 NÚCLEO (negro puro)
 local core = Instance.new("Frame", blackHole)
-core.Size = UDim2.fromScale(0.4,0.4)
+core.Size = UDim2.fromScale(0.5,0.5)
 core.Position = UDim2.fromScale(0.5,0.5)
 core.AnchorPoint = Vector2.new(0.5,0.5)
 core.BackgroundColor3 = Color3.fromRGB(0,0,0)
 core.BorderSizePixel = 0
 Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
 
--- 🌊 DISCO DE ACRECIÓN (SIMULACIÓN FLUIDA)
+-- 🌊 DISCO DE ACRECIÓN (CAPA BASE)
 local disk = Instance.new("Frame", blackHole)
 disk.Size = UDim2.fromScale(1,1)
 disk.Position = UDim2.fromScale(0.5,0.5)
 disk.AnchorPoint = Vector2.new(0.5,0.5)
 disk.BackgroundTransparency = 1
 
+Instance.new("UICorner", disk).CornerRadius = UDim.new(1,0)
+
 local grad = Instance.new("UIGradient", disk)
-grad.Rotation = 0
 
 grad.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(80,140,255)), -- azul neón
-	ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255,255,255)), -- brillo
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,200,120)), -- dorado
-	ColorSequenceKeypoint.new(0.7, Color3.fromRGB(120,60,255)), -- violeta
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(40,80,255)),   -- azul profundo
+	ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120,180,255)), -- azul brillante
+	ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255,255,255)), -- brillo
+	ColorSequenceKeypoint.new(0.55, Color3.fromRGB(255,200,120)), -- dorado
+	ColorSequenceKeypoint.new(0.75, Color3.fromRGB(100,60,255)), -- violeta
 	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
 }
 
 grad.Transparency = NumberSequence.new{
 	NumberSequenceKeypoint.new(0,0.2),
-	NumberSequenceKeypoint.new(0.5,0.4),
+	NumberSequenceKeypoint.new(0.5,0.3),
 	NumberSequenceKeypoint.new(1,1)
 }
 
--- 🔵 ANILLO CIRCULAR REAL
-local ring = Instance.new("Frame", blackHole)
-ring.Size = UDim2.fromScale(0.75,0.75)
-ring.Position = UDim2.fromScale(0.5,0.5)
-ring.AnchorPoint = Vector2.new(0.5,0.5)
-ring.BackgroundTransparency = 1
+-- 🌫️ CAPA EXTRA (irregularidad)
+local disk2 = Instance.new("Frame", blackHole)
+disk2.Size = UDim2.fromScale(1.1,1.1)
+disk2.Position = UDim2.fromScale(0.5,0.5)
+disk2.AnchorPoint = Vector2.new(0.5,0.5)
+disk2.BackgroundTransparency = 1
 
-local stroke = Instance.new("UIStroke", ring)
-stroke.Thickness = 3
-stroke.Color = Color3.fromRGB(100,180,255) -- azul neón
-stroke.Transparency = 0.1
+Instance.new("UICorner", disk2).CornerRadius = UDim.new(1,0)
 
--- ✨ partículas blancas en el anillo (detalle)
-for i = 1,12 do
-	local p = Instance.new("Frame", ring)
-	p.Size = UDim2.fromOffset(2,2)
-	p.AnchorPoint = Vector2.new(0.5,0.5)
+local grad2 = Instance.new("UIGradient", disk2)
+grad2.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
+}
 
-	local angle = (i/12) * math.pi * 2
-	local radius = 30
+grad2.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0,0.85),
+	NumberSequenceKeypoint.new(1,1)
+}
 
-	p.Position = UDim2.new(
-		0.5 + math.cos(angle)*0.35,
-		0,
-		0.5 + math.sin(angle)*0.35,
-		0
-	)
-
-	p.BackgroundColor3 = Color3.fromRGB(255,255,255)
-	p.BorderSizePixel = 0
-end
-
--- 🌪️ EFECTO DE CORRIENTE (CLAVE)
+-- 🌪️ FLUJO REAL (NO ROTACIÓN RÍGIDA)
 RunService.RenderStepped:Connect(function(dt)
-	-- flujo del disco (esto hace el efecto "agua")
-	grad.Rotation += dt * 120
+	-- movimiento tipo "corriente"
+	grad.Rotation += dt * 90
 	
-	-- rotación ligera del anillo
-	ring.Rotation += dt * 15
+	-- capa secundaria se mueve distinto → rompe simetría
+	grad2.Rotation -= dt * 40
 end)
 
 --==================================================
