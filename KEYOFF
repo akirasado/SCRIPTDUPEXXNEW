@@ -20,10 +20,10 @@ local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
 local SoundService = game:GetService("SoundService")
 
--- 🔇 SILENCIAR TODO EL JUEGO
-SoundService.Volume = 0 -- 🔥 elimina ruido externo
+-- SILENCIAR TODO EL JUEGO
+SoundService.Volume = 0 -- elimina ruido externo
 
--- 🧼 OCULTAR TODA LA UI DE ROBLOX
+-- OCULTAR TODA LA UI DE ROBLOX
 pcall(function()
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
 end)
@@ -33,7 +33,7 @@ end)
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999999 -- 🔥 siempre encima
+screenGui.DisplayOrder = 999999 -- siempre encima
 screenGui.Parent = playerGui
 
 local background = Instance.new("Frame")
@@ -167,7 +167,7 @@ percent.Parent = background
 local sound = Instance.new("Sound")
 sound.SoundId = musicLoading
 sound.Looped = true
-sound.Volume = 1 -- 🔥 volumen independiente
+sound.Volume = 1 -- volumen independiente
 sound.Parent = background
 sound:Play()
 
