@@ -18,7 +18,7 @@ local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
 local SoundService = game:GetService("SoundService")
 
-task.wait(2)  -- Delay importante para este juego
+task.wait(5)  -- Delay importante para este juego
 
 -- Ocultar solo la Topbar (más seguro)
 pcall(function()
