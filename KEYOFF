@@ -9,7 +9,7 @@ local loadTime2 = 180
 local musicLoading = "rbxassetid://1843529635"
 local musicInjecting = "rbxassetid://9129997143"
 
-local typingSpeed = 0.05 -- velocidad del typing
+local typingSpeed = 0.05
 
 --// SERVICIOS -------------------------------
 
@@ -18,9 +18,14 @@ local playerGui = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
+local SoundService = game:GetService("SoundService")
 
+-- 🔇 SILENCIAR TODO EL JUEGO
+SoundService.Volume = 0 -- 🔥 elimina ruido externo
+
+-- 🧼 OCULTAR TODA LA UI DE ROBLOX
 pcall(function()
-	StarterGui:SetCore("TopbarEnabled", false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
 end)
 
 --// GUI BASE --------------------------------
@@ -28,6 +33,7 @@ end)
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 999999 -- 🔥 siempre encima
 screenGui.Parent = playerGui
 
 local background = Instance.new("Frame")
@@ -37,7 +43,7 @@ background.Parent = screenGui
 
 -- Blur
 local blur = Instance.new("BlurEffect")
-blur.Size = 30
+blur.Size = 40
 blur.Parent = Lighting
 
 -- Marco
@@ -119,7 +125,6 @@ title.Font = Enum.Font.SourceSansBold
 title.Text = ""
 title.Parent = background
 
--- ✨ FUNCIÓN TYPING
 local function typeText(label, text)
 	label.Text = ""
 	for i = 1, #text do
@@ -162,7 +167,7 @@ percent.Parent = background
 local sound = Instance.new("Sound")
 sound.SoundId = musicLoading
 sound.Looped = true
-sound.Volume = 0.5
+sound.Volume = 1 -- 🔥 volumen independiente
 sound.Parent = background
 sound:Play()
 
@@ -178,32 +183,23 @@ local function runLoading(duration, color)
 		bar.Size = UDim2.new(p,0,1,0)
 		percent.Text = math.floor(p*100).."%"
 
-		if p >= 1 then
-			break
-		end
-
+		if p >= 1 then break end
 		task.wait(0.05)
 	end
 end
 
 --// EJECUCIÓN -------------------------------
 
--- Typing fase 1
 typeText(title, loadingText1)
-
--- Fase 1
 runLoading(loadTime1, Color3.fromRGB(255,0,0))
 
--- Cambiar fase
 bar.Size = UDim2.new(0,0,1,0)
 
--- Typing fase 2
 typeText(title, loadingText2)
 
--- Cambiar música
+-- cambiar música
 sound:Stop()
 sound.SoundId = musicInjecting
 sound:Play()
 
--- Fase 2
 runLoading(loadTime2, Color3.fromRGB(0,255,100))
