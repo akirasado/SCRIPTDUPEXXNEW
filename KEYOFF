@@ -90,6 +90,62 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
+-- 🕳️ AGUJERO NEGRO
+--==================================================
+
+local blackHole = Instance.new("Frame", bg)
+blackHole.Size = UDim2.fromOffset(160,160)
+blackHole.Position = UDim2.fromScale(0.25,0.7)
+blackHole.AnchorPoint = Vector2.new(0.5,0.5)
+blackHole.BackgroundTransparency = 1
+
+-- núcleo oscuro
+local core = Instance.new("Frame", blackHole)
+core.Size = UDim2.fromScale(0.4,0.4)
+core.Position = UDim2.fromScale(0.5,0.5)
+core.AnchorPoint = Vector2.new(0.5,0.5)
+core.BackgroundColor3 = Color3.fromRGB(0,0,0)
+core.BorderSizePixel = 0
+Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
+
+-- anillo brillante
+local ring = Instance.new("Frame", blackHole)
+ring.Size = UDim2.fromScale(0.9,0.9)
+ring.Position = UDim2.fromScale(0.5,0.5)
+ring.AnchorPoint = Vector2.new(0.5,0.5)
+ring.BackgroundTransparency = 1
+
+local ringStroke = Instance.new("UIStroke", ring)
+ringStroke.Thickness = 6
+ringStroke.Color = Color3.fromRGB(180,120,255)
+ringStroke.Transparency = 0.2
+
+-- glow exterior
+local glow = Instance.new("Frame", blackHole)
+glow.Size = UDim2.fromScale(1.2,1.2)
+glow.Position = UDim2.fromScale(0.5,0.5)
+glow.AnchorPoint = Vector2.new(0.5,0.5)
+glow.BackgroundTransparency = 1
+
+local grad = Instance.new("UIGradient", glow)
+grad.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(120,60,255)),
+	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
+}
+grad.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0,0.6),
+	NumberSequenceKeypoint.new(1,1)
+}
+
+-- anillo inclinado tipo interstellar
+ring.Rotation = 20
+
+-- rotación suave
+RunService.RenderStepped:Connect(function(dt)
+	ring.Rotation += dt * 15
+end)
+
+--==================================================
 -- ⭐ ESTRELLAS (DESAPARECER → MOVER → APARECER)
 --==================================================
 
@@ -110,23 +166,23 @@ end
 task.spawn(function()
 	while true do
 		for _,s in ipairs(stars) do
-			-- Fade OUT
-			TweenService:Create(s, TweenInfo.new(0.3), {
+			-- Fade OUT (más lento)
+			TweenService:Create(s, TweenInfo.new(0.6), {
 				BackgroundTransparency = 1
 			}):Play()
 
-			task.wait(0.3)
+			task.wait(0.6)
 
 			-- Nueva posición
 			s.Position = UDim2.fromScale(math.random(), math.random())
 
-			-- Fade IN
-			TweenService:Create(s, TweenInfo.new(0.4), {
+			-- Fade IN (más suave)
+			TweenService:Create(s, TweenInfo.new(0.7), {
 				BackgroundTransparency = math.random(30,80)/100
 			}):Play()
 		end
 
-		task.wait(0.2)
+		task.wait(0.3)
 	end
 end)
 
