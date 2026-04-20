@@ -3,8 +3,6 @@ local loadingText1 = "LOADING DUPEXX GALATIC SCRIPT"
 local loadingText2 = "INJECTING DUPEXX GALACTIC SCRIPT"
 local loadTime1 = 300
 local loadTime2 = 180
-local musicLoading = "rbxassetid://1843529635"
-local musicInjecting = "rbxassetid://9129997143"
 local typingSpeed = 0.04
 
 --// SERVICIOS -------------------------------
@@ -23,73 +21,67 @@ background.Size = UDim2.new(1,0,1,0)
 background.BackgroundColor3 = Color3.fromRGB(0,0,0)
 background.Parent = screenGui
 
--- Blur
+-- Blur ligero
 local blur = Instance.new("BlurEffect")
-blur.Size = 15
+blur.Size = 18
 blur.Parent = Lighting
 
---// 🌌 GALAXIA OPTIMIZADA --------------------
+--// 🌌 GALAXIA MEJORADA (ESPIRAL CONECTADA) ---
 local galaxy = Instance.new("Frame")
 galaxy.Size = UDim2.new(0,180,0,180)
-galaxy.Position = UDim2.new(0.8,-90,0.2,-90)
+galaxy.Position = UDim2.new(0.75,-90,0.25,-90)
 galaxy.BackgroundTransparency = 1
 galaxy.Parent = background
 
-local galaxyStars = {}
-
-for i = 1,80 do -- menos puntos
+for i = 1,120 do
 	local star = Instance.new("Frame")
 
-	local angle = i * 0.3
-	local radius = angle * 1.8
+	local angle = i * 0.15
+	local radius = angle * 2
 
 	local x = math.cos(angle) * radius
 	local y = math.sin(angle) * radius
 
+	star.Size = UDim2.new(0,2,0,2)
+	star.Position = UDim2.new(0.5, x, 0.5, y)
+	star.BackgroundColor3 = Color3.fromRGB(170,170,255)
+	star.BackgroundTransparency = 0.4
+	star.BorderSizePixel = 0
+	star.Parent = galaxy
+end
+
+--// ⭐ ESTRELLAS OPTIMIZADAS -----------------
+local stars = {}
+
+for i = 1,90 do
+	local star = Instance.new("Frame")
 	local size = math.random(2,4)
 
 	star.Size = UDim2.new(0,size,0,size)
-	star.Position = UDim2.new(0.5, x, 0.5, y)
-	star.BackgroundColor3 = Color3.fromRGB(180,180,255)
-	star.BackgroundTransparency = math.random(2,6)/10
-	star.BorderSizePixel = 0
-	star.Parent = galaxy
-
-	table.insert(galaxyStars, star)
-end
-
---// ✨ ESTRELLAS GRANDES (FONDO) --------------
-local stars = {}
-
-for i = 1,35 do -- MUCHO menos
-	local star = Instance.new("Frame")
-
-	local size = math.random(3,6) -- más grandes
-	star.Size = UDim2.new(0,size,0,size)
 	star.Position = UDim2.new(math.random(),0,math.random(),0)
 	star.BackgroundColor3 = Color3.fromRGB(200,200,255)
-	star.BackgroundTransparency = math.random(4,9)/10 -- algunas casi invisibles
+	star.BackgroundTransparency = math.random(4,9)/10
 	star.BorderSizePixel = 0
 	star.Parent = background
 
 	table.insert(stars, star)
 end
 
---// 🔄 LOOP GLOBAL (OPTIMIZADO) ---------------
+--// 🔄 LOOP GLOBAL (CLAVE DEL RENDIMIENTO) ---
 task.spawn(function()
 	while true do
-		-- Rotación galaxia (MUY suave)
-		galaxy.Rotation += 0.05
+		-- Rotación galaxia suave
+		galaxy.Rotation += 0.08
 
-		-- Animación ligera estrellas
+		-- Parpadeo rápido pero ligero (~0.20)
 		for _, star in ipairs(stars) do
 			star.BackgroundTransparency = math.clamp(
-				star.BackgroundTransparency + (math.random(-2,2)/100),
+				star.BackgroundTransparency + (math.random(-3,3)/100),
 				0.3, 0.9
 			)
 		end
 
-		task.wait(0.1) -- clave para rendimiento
+		task.wait(0.2)
 	end
 end)
 
@@ -101,8 +93,26 @@ title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(170,0,255)
 title.TextScaled = true
 title.Font = Enum.Font.SourceSansBold
+title.Text = ""
 title.Parent = background
 
+-- Glow
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255,255,255)
+stroke.Thickness = 1.2
+stroke.Transparency = 0.5
+stroke.Parent = title
+
+task.spawn(function()
+	while true do
+		stroke.Transparency = 0.3
+		task.wait(1)
+		stroke.Transparency = 0.6
+		task.wait(1)
+	end
+end)
+
+-- Typing
 local function typeText(label, text)
 	label.Text = ""
 	for i = 1, #text do
@@ -111,7 +121,7 @@ local function typeText(label, text)
 	end
 end
 
---// BARRA ----------------------------------
+--// BARRA SUAVE Y PRECISA -------------------
 local barBg = Instance.new("Frame")
 barBg.Size = UDim2.new(0.6,0,0.05,0)
 barBg.Position = UDim2.new(0.2,0,0.55,0)
@@ -132,25 +142,21 @@ percent.TextScaled = true
 percent.Text = "0%"
 percent.Parent = background
 
---// MÚSICA ---------------------------------
-local sound = Instance.new("Sound")
-sound.SoundId = musicLoading
-sound.Looped = true
-sound.Volume = 0.5
-sound.Parent = background
-sound:Play()
-
---// LOADING --------------------------------
+-- Loading preciso + fluido
 local function runLoading(duration, color)
 	bar.BackgroundColor3 = color
 
-	TweenService:Create(bar, TweenInfo.new(duration), {
-		Size = UDim2.new(1,0,1,0)
-	}):Play()
+	local start = tick()
 
-	for i = 0, 100 do
-		percent.Text = i.."%"
-		task.wait(duration/100)
+	while true do
+		local p = math.clamp((tick() - start) / duration, 0, 1)
+
+		bar.Size = UDim2.new(p,0,1,0)
+		percent.Text = math.floor(p * 100).."%"
+
+		if p >= 1 then break end
+
+		task.wait(0.03) -- fluidez sin matar rendimiento
 	end
 end
 
@@ -161,11 +167,4 @@ runLoading(loadTime1, Color3.fromRGB(255,0,0))
 bar.Size = UDim2.new(0,0,1,0)
 
 typeText(title, loadingText2)
-
-sound:Stop()
-sound.SoundId = musicInjecting
-sound:Play()
-
 runLoading(loadTime2, Color3.fromRGB(0,255,100))
-
--- No se destruye nada
