@@ -1,724 +1,384 @@
 -- ============================================================
---  DUPEXX GALATIC SCRIPT — LOADING SCREEN v2.0
---  Ultra-cinematic space loading screen
---  Inspirado en Interstellar | Sci-fi profundo
+--  DUPEXX GALATIC SCRIPT — LOADING SCREEN v3.0
 -- ============================================================
 
-local Players = game:GetService("Players")
+local Players      = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local ContentProvider = game:GetService("ContentProvider")
+local RunService   = game:GetService("RunService")
 
-local player = Players.LocalPlayer
+local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ============================================================
---  CONFIGURACIÓN
--- ============================================================
 local CONFIG = {
-	LOADING_TIME = 8,           -- segundos mínimos de carga
-	STAR_COUNT = 180,
-	NEBULA_COUNT = 4,
-	BLACK_HOLE_PARTICLES = 220,
-	JET_INTERVAL = 30,          -- segundos entre jets
-	JET_PARTICLES = 40,
-	GALAXY_ARMS = 2,
-	GALAXY_POINTS = 90,
+	LOADING_TIME         = 8,
+	STAR_COUNT           = 180,
+	BLACK_HOLE_PARTICLES = 200,
+	JET_INTERVAL         = 12,
+	JET_PARTICLES        = 80,
+	GALAXY_ARMS          = 2,
+	GALAXY_POINTS        = 90,
 }
 
--- ============================================================
---  SETUP SCREENGUI
--- ============================================================
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DupexxLoadingScreen"
+screenGui.Name           = "DupexxLoadingScreen"
 screenGui.IgnoreGuiInset = true
-screenGui.ResetOnSpawn = false
+screenGui.ResetOnSpawn   = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = playerGui
+screenGui.Parent         = playerGui
 
-local W = 1920
-local H = 1080
-
--- Frame raíz (fondo negro profundo)
 local root = Instance.new("Frame")
-root.Name = "Root"
-root.Size = UDim2.fromScale(1, 1)
-root.Position = UDim2.fromScale(0, 0)
-root.BackgroundColor3 = Color3.fromRGB(2, 3, 10)
-root.BorderSizePixel = 0
-root.ZIndex = 1
-root.Parent = screenGui
+root.Name                  = "Root"
+root.Size                  = UDim2.fromScale(1,1)
+root.Position              = UDim2.fromScale(0,0)
+root.BackgroundColor3      = Color3.fromRGB(2,3,10)
+root.BorderSizePixel       = 0
+root.ZIndex                = 1
+root.ClipsDescendants      = true
+root.Parent                = screenGui
 
--- ============================================================
---  UTILIDADES
--- ============================================================
-local function lerp(a, b, t) return a + (b - a) * t end
-local function rand(min, max) return min + math.random() * (max - min) end
-local function randInt(min, max) return math.random(min, max) end
-local function hsv(h, s, v) return Color3.fromHSV(h, s, v) end
+-- Utilities
+local function lerp(a,b,t) return a+(b-a)*t end
+local function rand(mn,mx)  return mn+math.random()*(mx-mn) end
+local function randInt(mn,mx) return math.random(mn,mx) end
 
-local function createFrame(parent, size, pos, color, alpha, zindex)
-	local f = Instance.new("Frame")
-	f.Size = size
-	f.Position = pos
-	f.BackgroundColor3 = color or Color3.new(1,1,1)
-	f.BackgroundTransparency = alpha or 0
-	f.BorderSizePixel = 0
-	f.ZIndex = zindex or 2
-	f.Parent = parent
-	return f
+local function mkFrame(parent,size,pos,color,alpha,z)
+	local f=Instance.new("Frame")
+	f.Size=size; f.Position=pos
+	f.BackgroundColor3=color or Color3.new(1,1,1)
+	f.BackgroundTransparency=alpha or 0
+	f.BorderSizePixel=0; f.ZIndex=z or 2
+	f.Parent=parent; return f
 end
 
-local function createImageLabel(parent, size, pos, zindex)
-	local img = Instance.new("ImageLabel")
-	img.Size = size
-	img.Position = pos
-	img.BackgroundTransparency = 1
-	img.ZIndex = zindex or 2
-	img.Parent = parent
-	return img
+local function mkLabel(parent,text,size,pos,color,fs,z)
+	local l=Instance.new("TextLabel")
+	l.Size=size; l.Position=pos
+	l.BackgroundTransparency=1
+	l.Text=text; l.TextColor3=color or Color3.new(1,1,1)
+	l.TextSize=fs or 18; l.Font=Enum.Font.GothamBold
+	l.ZIndex=z or 10; l.Parent=parent; return l
 end
 
-local function createLabel(parent, text, size, pos, color, fontsize, zindex)
-	local lbl = Instance.new("TextLabel")
-	lbl.Size = size
-	lbl.Position = pos
-	lbl.BackgroundTransparency = 1
-	lbl.Text = text
-	lbl.TextColor3 = color or Color3.new(1,1,1)
-	lbl.TextSize = fontsize or 18
-	lbl.Font = Enum.Font.GothamBold
-	lbl.ZIndex = zindex or 10
-	lbl.Parent = parent
-	return lbl
+local function corner(obj,s)
+	local c=Instance.new("UICorner")
+	c.CornerRadius=UDim.new(s or 1,0); c.Parent=obj
 end
 
-local function tween(obj, time, props, style, dir)
-	local info = TweenInfo.new(
-		time,
-		style or Enum.EasingStyle.Sine,
-		dir or Enum.EasingDirection.InOut
-	)
-	local t = TweenService:Create(obj, info, props)
-	t:Play()
-	return t
+local function tw(obj,time,props,style,dir)
+	local t=TweenService:Create(obj,TweenInfo.new(time,style or Enum.EasingStyle.Sine,dir or Enum.EasingDirection.InOut),props)
+	t:Play(); return t
 end
 
--- ============================================================
---  CAPA 1 — GRADIENTE CÓSMICO DE FONDO
--- ============================================================
+-- Background gradient
 do
-	local grad = Instance.new("UIGradient")
-	grad.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(2, 3, 10)),
-		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(4, 8, 28)),
-		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(8, 3, 20)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(2, 3, 10)),
+	local g=Instance.new("UIGradient")
+	g.Color=ColorSequence.new({
+		ColorSequenceKeypoint.new(0,Color3.fromRGB(2,3,10)),
+		ColorSequenceKeypoint.new(0.3,Color3.fromRGB(4,8,28)),
+		ColorSequenceKeypoint.new(0.7,Color3.fromRGB(8,3,20)),
+		ColorSequenceKeypoint.new(1,Color3.fromRGB(2,3,10)),
 	})
-	grad.Rotation = 135
-	grad.Parent = root
+	g.Rotation=135; g.Parent=root
 end
 
--- ============================================================
---  CAPA 2 — NEBULOSAS (4 capas sutiles)
--- ============================================================
-local nebulas = {}
-local nebulaData = {
-	{color = Color3.fromRGB(20, 40, 120), x = 0.1, y = 0.15, w = 0.55, h = 0.55, rot = 0},
-	{color = Color3.fromRGB(80, 15, 100), x = 0.45, y = 0.3, w = 0.6, h = 0.5, rot = 45},
-	{color = Color3.fromRGB(15, 60, 130), x = 0.6, y = 0.05, w = 0.45, h = 0.45, rot = -20},
-	{color = Color3.fromRGB(100, 10, 60), x = 0.0, y = 0.5, w = 0.4, h = 0.4, rot = 10},
+-- Nebulosas
+local nebulas={}
+local nebulaData={
+	{color=Color3.fromRGB(20,40,120),x=0.10,y=0.15,w=0.55,h=0.55,rot=0},
+	{color=Color3.fromRGB(80,15,100),x=0.45,y=0.30,w=0.60,h=0.50,rot=45},
+	{color=Color3.fromRGB(15,60,130),x=0.60,y=0.05,w=0.45,h=0.45,rot=-20},
+	{color=Color3.fromRGB(100,10,60),x=0.00,y=0.50,w=0.40,h=0.40,rot=10},
 }
-
-for _, nd in ipairs(nebulaData) do
-	local neb = Instance.new("Frame")
-	neb.Size = UDim2.fromScale(nd.w, nd.h)
-	neb.Position = UDim2.fromScale(nd.x - nd.w/2, nd.y - nd.h/2)
-	neb.BackgroundColor3 = nd.color
-	neb.BackgroundTransparency = 0.88
-	neb.BorderSizePixel = 0
-	neb.ZIndex = 2
-	neb.Parent = root
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = neb
-
-	-- Blur simulado con gradiente radial
-	local grad = Instance.new("UIGradient")
-	grad.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
-		ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)),
-		ColorSequenceKeypoint.new(1, Color3.new(0,0,0)),
-	})
-	grad.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0),
-		NumberSequenceKeypoint.new(0.6, 0.3),
-		NumberSequenceKeypoint.new(1, 1),
-	})
-	grad.Rotation = nd.rot
-	grad.Parent = neb
-
-	table.insert(nebulas, {frame = neb, baseRot = nd.rot, speed = rand(0.3, 0.8)})
+for _,nd in ipairs(nebulaData) do
+	local neb=Instance.new("Frame")
+	neb.Size=UDim2.fromScale(nd.w,nd.h)
+	neb.Position=UDim2.fromScale(nd.x-nd.w/2,nd.y-nd.h/2)
+	neb.BackgroundColor3=nd.color
+	neb.BackgroundTransparency=0.88
+	neb.BorderSizePixel=0; neb.ZIndex=2; neb.Parent=root
+	corner(neb)
+	local g=Instance.new("UIGradient")
+	g.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),ColorSequenceKeypoint.new(1,Color3.new(0,0,0))})
+	g.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.6,0.3),NumberSequenceKeypoint.new(1,1)})
+	g.Rotation=nd.rot; g.Parent=neb
+	table.insert(nebulas,{frame=neb,speed=rand(0.2,0.5)})
 end
 
--- ============================================================
---  CAPA 3 — ESTRELLAS (campo dinámico)
--- ============================================================
-local stars = {}
-local starLayer = createFrame(root, UDim2.fromScale(1,1), UDim2.fromScale(0,0), Color3.new(0,0,0), 1, 3)
-
-for i = 1, CONFIG.STAR_COUNT do
-	local size = rand(1, 3.5)
-	local x = rand(0, 1)
-	local y = rand(0, 1)
-	local brightness = rand(0.5, 1)
-	local blinkSpeed = rand(1.5, 5.0)
-	local blinkOffset = rand(0, math.pi * 2)
-
-	local star = Instance.new("Frame")
-	star.Size = UDim2.fromOffset(size, size)
-	star.Position = UDim2.fromScale(x, y)
-	star.AnchorPoint = Vector2.new(0.5, 0.5)
-	star.BackgroundColor3 = Color3.fromRGB(
-		randInt(200, 255),
-		randInt(200, 255),
-		randInt(220, 255)
-	)
-	star.BackgroundTransparency = 1 - brightness * 0.8
-	star.BorderSizePixel = 0
-	star.ZIndex = 3
-	star.Parent = starLayer
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1,0)
-	corner.Parent = star
-
-	table.insert(stars, {
-		frame = star,
-		baseAlpha = 1 - brightness * 0.8,
-		blinkSpeed = blinkSpeed,
-		blinkOffset = blinkOffset,
-		x = x, y = y,
-		lifeTime = rand(8, 20),
-		age = rand(0, 20),
-	})
+-- Stars (very slow blink)
+local stars={}
+local starLayer=mkFrame(root,UDim2.fromScale(1,1),UDim2.fromScale(0,0),Color3.new(0,0,0),1,3)
+for i=1,CONFIG.STAR_COUNT do
+	local size=rand(1,3.2); local x=rand(0,1); local y=rand(0,1)
+	local bright=rand(0.4,1.0)
+	local bspeed=rand(0.12,0.45)  -- very slow
+	local boff=rand(0,math.pi*2)
+	local star=Instance.new("Frame")
+	star.Size=UDim2.fromOffset(size,size)
+	star.Position=UDim2.fromScale(x,y)
+	star.AnchorPoint=Vector2.new(0.5,0.5)
+	star.BackgroundColor3=Color3.fromRGB(randInt(200,255),randInt(200,255),randInt(220,255))
+	star.BackgroundTransparency=1-bright*0.85
+	star.BorderSizePixel=0; star.ZIndex=3; star.Parent=starLayer
+	corner(star)
+	table.insert(stars,{frame=star,baseAlpha=1-bright*0.85,blinkSpeed=bspeed,blinkOffset=boff,x=x,y=y,lifeTime=rand(30,70),age=rand(0,70)})
 end
 
--- ============================================================
---  CAPA 4 — GALAXIA ESPIRAL (esquina superior derecha)
--- ============================================================
-local galaxyContainer = createFrame(root, UDim2.fromOffset(220, 220), UDim2.new(1, -240, 0, 20), Color3.new(0,0,0), 1, 4)
-local galaxyPoints = {}
+-- Galaxy (brighter)
+local galaxyContainer=mkFrame(root,UDim2.fromOffset(240,240),UDim2.new(1,-260,0,20),Color3.new(0,0,0),1,4)
+local galaxyAngle=0
+for arm=0,CONFIG.GALAXY_ARMS-1 do
+	for i=1,CONFIG.GALAXY_POINTS do
+		local t=i/CONFIG.GALAXY_POINTS
+		local angle=(arm/CONFIG.GALAXY_ARMS)*math.pi*2+t*math.pi*3.2
+		local radius=t*100; local noise=rand(-5,5)
+		local px=120+math.cos(angle)*(radius+noise)
+		local py=120+math.sin(angle)*(radius+noise)*0.45
+		local bright=lerp(1,0.05,t); local sz=lerp(5,1.5,t)
+		local cmix=rand(0,1)
+		local pt=Instance.new("Frame")
+		pt.Size=UDim2.fromOffset(sz,sz)
+		pt.Position=UDim2.fromOffset(px-sz/2,py-sz/2)
+		pt.AnchorPoint=Vector2.new(0.5,0.5)
+		pt.BackgroundTransparency=1-bright*0.95
+		if cmix>0.65 then pt.BackgroundColor3=Color3.fromRGB(210,180,255)
+		elseif cmix>0.35 then pt.BackgroundColor3=Color3.fromRGB(255,245,210)
+		else pt.BackgroundColor3=Color3.fromRGB(160,210,255) end
+		pt.BorderSizePixel=0; pt.ZIndex=4; pt.Parent=galaxyContainer
+		corner(pt)
+	end
+end
+for _,cfg in ipairs({{w=44,h=18,t=0.0,c=Color3.fromRGB(255,255,255)},{w=28,h=12,t=0.2,c=Color3.fromRGB(230,210,255)},{w=14,h=6,t=0.5,c=Color3.fromRGB(255,240,180)}}) do
+	local core=mkFrame(galaxyContainer,UDim2.fromOffset(cfg.w,cfg.h),UDim2.fromOffset(120-cfg.w/2,120-cfg.h/2),cfg.c,cfg.t,6)
+	corner(core)
+end
+for j=1,22 do
+	local gx=rand(25,215); local gy=rand(55,185); local gs=rand(2,4.5)
+	local gpt=mkFrame(galaxyContainer,UDim2.fromOffset(gs,gs),UDim2.fromOffset(gx,gy),Color3.fromRGB(255,255,255),rand(0,0.2),5)
+	corner(gpt)
+end
 
-for arm = 0, CONFIG.GALAXY_ARMS - 1 do
-	for i = 1, CONFIG.GALAXY_POINTS do
-		local t = i / CONFIG.GALAXY_POINTS
-		local angle = (arm / CONFIG.GALAXY_ARMS) * math.pi * 2 + t * math.pi * 3
-		local radius = t * 95
-		local noise = rand(-6, 6)
-		local px = 110 + math.cos(angle) * (radius + noise)
-		local py = 110 + math.sin(angle) * (radius + noise) * 0.45
+-- Black Hole (smaller, realistic lateral view)
+local bhCenterX=0.28; local bhCenterY=0.50
+local bhRadius=52    -- smaller than before
+local BHW=360; local BHH=360; local BHO=BHW/2
+local bhContainer=mkFrame(root,UDim2.fromOffset(BHW,BHH),UDim2.new(bhCenterX,-BHO,bhCenterY,-BHO),Color3.new(0,0,0),1,5)
 
-		local brightness = lerp(1, 0.1, t)
-		local size = lerp(3, 1, t)
-		local colorMix = rand(0, 1)
+-- Gravitational lens halos
+for r=1,6 do
+	local lw=bhRadius*2+r*20; local lh=lw*0.38
+	local lens=mkFrame(bhContainer,UDim2.fromOffset(lw,lh),UDim2.fromOffset(BHO-lw/2,BHO-lh/2),Color3.fromRGB(5,8,25),lerp(0.25,0.92,(r-1)/5),5+r)
+	corner(lens)
+end
 
-		local pt = Instance.new("Frame")
-		pt.Size = UDim2.fromOffset(size, size)
-		pt.Position = UDim2.fromOffset(px - size/2, py - size/2)
-		pt.AnchorPoint = Vector2.new(0.5, 0.5)
-		pt.BackgroundTransparency = 1 - brightness * 0.9
-
-		if colorMix > 0.6 then
-			pt.BackgroundColor3 = Color3.fromRGB(180, 160, 255)
-		elseif colorMix > 0.3 then
-			pt.BackgroundColor3 = Color3.fromRGB(255, 240, 200)
-		else
-			pt.BackgroundColor3 = Color3.fromRGB(150, 200, 255)
-		end
-
-		pt.BorderSizePixel = 0
-		pt.ZIndex = 4
-		pt.Parent = galaxyContainer
-
-		local c = Instance.new("UICorner")
-		c.CornerRadius = UDim.new(1,0)
-		c.Parent = pt
-
-		table.insert(galaxyPoints, pt)
+-- Accretion disc (very flat, Interstellar lateral view)
+local discDefs={
+	{rOff=0,  color=Color3.fromRGB(255,245,200),alpha=0.00},
+	{rOff=10, color=Color3.fromRGB(255,195,70), alpha=0.10},
+	{rOff=22, color=Color3.fromRGB(255,115,20), alpha=0.18},
+	{rOff=34, color=Color3.fromRGB(210,50,140), alpha=0.28},
+	{rOff=48, color=Color3.fromRGB(140,55,255), alpha=0.42},
+	{rOff=64, color=Color3.fromRGB(80,120,255), alpha=0.55},
+	{rOff=82, color=Color3.fromRGB(40,75,200),  alpha=0.68},
+	{rOff=100,color=Color3.fromRGB(15,35,130),  alpha=0.82},
+}
+for _,dd in ipairs(discDefs) do
+	local dw=(bhRadius+dd.rOff)*2; local dh=dw*0.12
+	local disc=mkFrame(bhContainer,UDim2.fromOffset(dw,dh),UDim2.fromOffset(BHO-dw/2,BHO-dh/2),dd.color,dd.alpha,7)
+	corner(disc)
+	if dd.rOff<35 then
+		local st=Instance.new("UIStroke"); st.Color=dd.color; st.Thickness=1; st.Transparency=0.35; st.Parent=disc
 	end
 end
 
--- Núcleo brillante de la galaxia
-local galaxyCore = Instance.new("Frame")
-galaxyCore.Size = UDim2.fromOffset(30, 14)
-galaxyCore.Position = UDim2.fromOffset(95, 103)
-galaxyCore.BackgroundColor3 = Color3.fromRGB(220, 200, 255)
-galaxyCore.BackgroundTransparency = 0.1
-galaxyCore.BorderSizePixel = 0
-galaxyCore.ZIndex = 5
-galaxyCore.Parent = galaxyContainer
-local gc = Instance.new("UICorner")
-gc.CornerRadius = UDim.new(1,0)
-gc.Parent = galaxyCore
+-- Photon ring
+local prW=bhRadius*2+6; local prH=prW*0.13
+local photonRing=mkFrame(bhContainer,UDim2.fromOffset(prW,prH),UDim2.fromOffset(BHO-prW/2,BHO-prH/2),Color3.new(0,0,0),1,18)
+corner(photonRing)
+local pStroke=Instance.new("UIStroke"); pStroke.Color=Color3.fromRGB(255,218,110); pStroke.Thickness=2.5; pStroke.Transparency=0.04; pStroke.Parent=photonRing
 
--- ============================================================
---  CAPA 5 — AGUJERO NEGRO (centro-izquierda)
--- ============================================================
-local bhCenterX = 0.30
-local bhCenterY = 0.50
-local bhRadius = 90  -- radio del agujero negro en px
+-- Event horizon shadow
+local shW=bhRadius*2+22
+local shFrame=mkFrame(bhContainer,UDim2.fromOffset(shW,shW),UDim2.fromOffset(BHO-shW/2,BHO-shW/2),Color3.fromRGB(0,0,0),0.18,19)
+corner(shFrame)
 
-local bhContainer = createFrame(root, UDim2.fromOffset(420, 420),
-	UDim2.new(bhCenterX, -210, bhCenterY, -210),
-	Color3.new(0,0,0), 1, 5)
+-- Event horizon (black nucleus)
+local nucleus=mkFrame(bhContainer,UDim2.fromOffset(bhRadius*2,bhRadius*2),UDim2.fromOffset(BHO-bhRadius,BHO-bhRadius),Color3.fromRGB(0,0,0),0,20)
+corner(nucleus)
 
--- Anillo de sombra exterior (lente gravitacional)
-for r = 1, 5 do
-	local ring = Instance.new("Frame")
-	local rs = bhRadius * 2 + r * 28
-	ring.Size = UDim2.fromOffset(rs, rs * 0.42)
-	ring.Position = UDim2.fromOffset(210 - rs/2, 210 - rs*0.42/2)
-	ring.BackgroundColor3 = Color3.fromRGB(5, 10, 30)
-	ring.BackgroundTransparency = lerp(0.3, 0.85, (r-1)/4)
-	ring.BorderSizePixel = 0
-	ring.ZIndex = 5
-	ring.Parent = bhContainer
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(1,0)
-	c.Parent = ring
-end
-
--- Disco de acreción brillante
-local discColors = {
-	{Color3.fromRGB(255, 200, 80), 0.0},
-	{Color3.fromRGB(255, 120, 30), 0.2},
-	{Color3.fromRGB(200, 60, 180), 0.5},
-	{Color3.fromRGB(100, 150, 255), 0.8},
-	{Color3.fromRGB(200, 220, 255), 1.0},
+-- Accretion particles
+local orbitParticles={}
+local orbitLayer=mkFrame(root,UDim2.fromOffset(BHW,BHH),UDim2.new(bhCenterX,-BHO,bhCenterY,-BHO),Color3.new(0,0,0),1,14)
+local particleColors={
+	Color3.fromRGB(255,255,255),Color3.fromRGB(255,220,100),
+	Color3.fromRGB(140,190,255),Color3.fromRGB(210,110,255),Color3.fromRGB(255,155,60),
 }
-
-for i = 1, 8 do
-	local disc = Instance.new("Frame")
-	local dw = bhRadius * 2 + i * 18
-	local dh = dw * 0.20
-	disc.Size = UDim2.fromOffset(dw, dh)
-	disc.Position = UDim2.fromOffset(210 - dw/2, 210 - dh/2)
-	local t = (i-1)/7
-	local colorIdx = math.floor(t * (#discColors - 1)) + 1
-	disc.BackgroundColor3 = discColors[math.min(colorIdx, #discColors)][1]
-	disc.BackgroundTransparency = lerp(0.2, 0.75, t)
-	disc.BorderSizePixel = 0
-	disc.ZIndex = 5 + i
-	disc.Parent = bhContainer
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(1,0)
-	c.Parent = disc
+for i=1,CONFIG.BLACK_HOLE_PARTICLES do
+	local angle=(i/CONFIG.BLACK_HOLE_PARTICLES)*math.pi*2
+	local spread=rand(-0.3,0.3)
+	local orbitR=rand(bhRadius+4,bhRadius+85)
+	local speed=rand(0.4,1.4)*(bhRadius/orbitR)
+	local sz=rand(1.5,3.5)
+	local col=particleColors[randInt(1,#particleColors)]
+	local ysc=rand(0.10,0.16)
+	local pt=mkFrame(orbitLayer,UDim2.fromOffset(sz,sz),UDim2.fromOffset(0,0),col,rand(0,0.3),15)
+	corner(pt)
+	table.insert(orbitParticles,{frame=pt,angle=angle+spread,radius=orbitR,speed=speed,size=sz,yScale=ysc})
 end
 
--- Núcleo negro del agujero negro
-local nucleus = Instance.new("Frame")
-nucleus.Size = UDim2.fromOffset(bhRadius * 2, bhRadius * 2)
-nucleus.Position = UDim2.fromOffset(210 - bhRadius, 210 - bhRadius)
-nucleus.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-nucleus.BackgroundTransparency = 0
-nucleus.BorderSizePixel = 0
-nucleus.ZIndex = 20
-nucleus.Parent = bhContainer
-local nc = Instance.new("UICorner")
-nc.CornerRadius = UDim.new(1,0)
-nc.Parent = nucleus
+-- JETS (large, neon, high energy)
+local JET_LAYER_SIZE=BHW*4
+local jetLayer=mkFrame(root,UDim2.fromOffset(JET_LAYER_SIZE,JET_LAYER_SIZE),
+	UDim2.new(bhCenterX,-JET_LAYER_SIZE/2,bhCenterY,-JET_LAYER_SIZE/2),Color3.new(0,0,0),1,16)
 
--- Borde fotónico (photon ring)
-local photonRing = Instance.new("Frame")
-photonRing.Size = UDim2.fromOffset(bhRadius * 2 + 8, bhRadius * 2 + 8)
-photonRing.Position = UDim2.fromOffset(210 - bhRadius - 4, 210 - bhRadius - 4)
-photonRing.BackgroundTransparency = 1
-photonRing.BorderSizePixel = 0
-photonRing.ZIndex = 19
-photonRing.Parent = bhContainer
-local pstroke = Instance.new("UIStroke")
-pstroke.Color = Color3.fromRGB(255, 230, 150)
-pstroke.Thickness = 2
-pstroke.Transparency = 0.2
-pstroke.Parent = photonRing
-local pc = Instance.new("UICorner")
-pc.CornerRadius = UDim.new(1,0)
-pc.Parent = photonRing
-
--- ============================================================
---  PARTÍCULAS DEL DISCO DE ACRECIÓN
--- ============================================================
-local orbitParticles = {}
-local orbitLayer = createFrame(root, UDim2.fromOffset(420, 420),
-	UDim2.new(bhCenterX, -210, bhCenterY, -210),
-	Color3.new(0,0,0), 1, 14)
-
-local particleColors = {
-	Color3.fromRGB(255, 255, 255),
-	Color3.fromRGB(255, 215, 80),
-	Color3.fromRGB(120, 180, 255),
-	Color3.fromRGB(200, 100, 255),
-	Color3.fromRGB(255, 140, 50),
+local JET_COLORS={
+	Color3.fromRGB(160,230,255),Color3.fromRGB(210,190,255),
+	Color3.fromRGB(255,255,255),Color3.fromRGB(80,200,255),Color3.fromRGB(190,90,255),
 }
-
-for i = 1, CONFIG.BLACK_HOLE_PARTICLES do
-	local angle = (i / CONFIG.BLACK_HOLE_PARTICLES) * math.pi * 2
-	local armSpread = rand(-0.4, 0.4)
-	local orbitRadius = rand(bhRadius + 5, bhRadius + 90)
-	local speed = rand(0.3, 1.2) * (1 / (orbitRadius / bhRadius))
-	local size = rand(1.5, 4)
-	local colorChoice = particleColors[randInt(1, #particleColors)]
-
-	local pt = Instance.new("Frame")
-	pt.Size = UDim2.fromOffset(size, size)
-	pt.BackgroundColor3 = colorChoice
-	pt.BackgroundTransparency = rand(0.0, 0.4)
-	pt.BorderSizePixel = 0
-	pt.ZIndex = 15
-	pt.Parent = orbitLayer
-
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(1,0)
-	c.Parent = pt
-
-	table.insert(orbitParticles, {
-		frame = pt,
-		angle = angle + armSpread,
-		radius = orbitRadius,
-		speed = speed,
-		size = size,
-		yScale = rand(0.15, 0.30),  -- achatamiento elíptico
-	})
-end
-
--- ============================================================
---  JETS (partículas polares cada 30s)
--- ============================================================
-local jetParticles = {}
-local jetLayer = createFrame(root, UDim2.fromOffset(420, 420),
-	UDim2.new(bhCenterX, -210, bhCenterY, -210),
-	Color3.new(0,0,0), 1, 16)
 
 local function fireJet()
-	for i = 1, CONFIG.JET_PARTICLES do
-		local isTop = i <= CONFIG.JET_PARTICLES / 2
-		local spread = rand(-18, 18)
-		local speed = rand(40, 100)
-		local life = rand(1.5, 3.5)
-
-		local pt = Instance.new("Frame")
-		pt.Size = UDim2.fromOffset(2, 2)
-		pt.Position = UDim2.fromOffset(209 + spread, isTop and 210 - bhRadius or 210 + bhRadius)
-		pt.BackgroundColor3 = Color3.fromRGB(220, 240, 255)
-		pt.BackgroundTransparency = 0.1
-		pt.BorderSizePixel = 0
-		pt.ZIndex = 16
-		pt.Parent = jetLayer
-
-		local c = Instance.new("UICorner")
-		c.CornerRadius = UDim.new(1,0)
-		c.Parent = pt
-
-		local direction = isTop and -1 or 1
-		local targetY = pt.Position.Y.Offset + direction * speed
-		local targetX = pt.Position.X.Offset + spread * 0.5
-
-		tween(pt, life, {
-			Position = UDim2.fromOffset(targetX, targetY),
-			BackgroundTransparency = 1,
-		}, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-		task.delay(life, function()
-			if pt and pt.Parent then pt:Destroy() end
-		end)
+	local cx=JET_LAYER_SIZE/2; local cy=JET_LAYER_SIZE/2
+	-- Central beams
+	for pole=1,2 do
+		local isTop=(pole==1)
+		for beam=1,3 do
+			local bW=rand(12,28); local bH=rand(200,380)
+			local bOX=rand(-8,8)
+			local startY=isTop and (cy-bhRadius-bH) or (cy+bhRadius)
+			local bFrame=mkFrame(jetLayer,UDim2.fromOffset(bW,bH),UDim2.fromOffset(cx-bW/2+bOX,startY),Color3.fromRGB(180,225,255),0.1,16)
+			local bc=Instance.new("UICorner"); bc.CornerRadius=UDim.new(0.15,0); bc.Parent=bFrame
+			local bg=Instance.new("UIGradient")
+			bg.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0.0),NumberSequenceKeypoint.new(0.5,0.4),NumberSequenceKeypoint.new(1,1.0)})
+			bg.Rotation=isTop and 180 or 0; bg.Parent=bFrame
+			local bstroke=Instance.new("UIStroke"); bstroke.Color=Color3.fromRGB(140,200,255); bstroke.Thickness=2; bstroke.Transparency=0.0; bstroke.Parent=bFrame
+			tw(bFrame,3.8,{BackgroundTransparency=1},Enum.EasingStyle.Cubic,Enum.EasingDirection.In)
+			tw(bstroke,3.8,{Transparency=1},Enum.EasingStyle.Cubic,Enum.EasingDirection.In)
+			task.delay(4.2,function() if bFrame and bFrame.Parent then bFrame:Destroy() end end)
+		end
+	end
+	-- Neon particles
+	for i=1,CONFIG.JET_PARTICLES do
+		local isTop=i<=CONFIG.JET_PARTICLES/2
+		local col=JET_COLORS[randInt(1,#JET_COLORS)]
+		local sz=rand(4,11); local life=rand(2.2,5.5)
+		local spread=rand(-55,55); local dist=rand(160,420)
+		local startX=cx+spread*0.25
+		local startY=isTop and (cy-bhRadius-2) or (cy+bhRadius+2)
+		local pt=mkFrame(jetLayer,UDim2.fromOffset(sz,sz),UDim2.fromOffset(startX-sz/2,startY-sz/2),col,0.0,17)
+		corner(pt)
+		local stroke=Instance.new("UIStroke"); stroke.Color=col; stroke.Thickness=1.5; stroke.Transparency=0.0; stroke.Parent=pt
+		local direction=isTop and -1 or 1
+		local endY=startY+direction*dist; local endX=startX+spread*0.7
+		tw(pt,life,{Position=UDim2.fromOffset(endX-sz/2,endY-sz/2),BackgroundTransparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+		tw(stroke,life,{Transparency=1},Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+		task.delay(life+0.15,function() if pt and pt.Parent then pt:Destroy() end end)
 	end
 end
 
--- ============================================================
---  BARRA DE PROGRESO
--- ============================================================
-local barContainer = createFrame(root,
-	UDim2.fromOffset(700, 22),
-	UDim2.new(0.5, -350, 0.82, 0),
-	Color3.fromRGB(10, 12, 30), 0, 10)
-local barCorner = Instance.new("UICorner")
-barCorner.CornerRadius = UDim.new(1, 0)
-barCorner.Parent = barContainer
+-- Progress bar (centered at Y=0.50)
+-- TITLE above bar
+local titleLabel=mkLabel(root,"",UDim2.new(1,0,0,62),UDim2.new(0,0,0.50,-108),Color3.fromRGB(180,60,255),38,11)
+titleLabel.TextXAlignment=Enum.TextXAlignment.Center
+local titleStroke=Instance.new("UIStroke"); titleStroke.Color=Color3.fromRGB(140,20,220); titleStroke.Thickness=1; titleStroke.Transparency=0.3; titleStroke.Parent=titleLabel
 
-local barStroke = Instance.new("UIStroke")
-barStroke.Color = Color3.fromRGB(60, 80, 180)
-barStroke.Thickness = 1
-barStroke.Transparency = 0.4
-barStroke.Parent = barContainer
+-- BAR
+local barContainer=mkFrame(root,UDim2.fromOffset(680,20),UDim2.new(0.5,-340,0.50,-10),Color3.fromRGB(10,12,30),0,10)
+corner(barContainer)
+local barStroke=Instance.new("UIStroke"); barStroke.Color=Color3.fromRGB(80,60,180); barStroke.Thickness=1; barStroke.Transparency=0.35; barStroke.Parent=barContainer
+local barBg=mkFrame(barContainer,UDim2.fromScale(1,1),UDim2.fromScale(0,0),Color3.fromRGB(5,8,20),0,10); corner(barBg)
+local barFill=mkFrame(barContainer,UDim2.fromScale(0,1),UDim2.fromScale(0,0),Color3.fromRGB(150,30,220),0,11); corner(barFill)
+local fillGrad=Instance.new("UIGradient")
+fillGrad.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(200,20,180)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(140,60,255)),ColorSequenceKeypoint.new(1,Color3.fromRGB(80,140,255))})
+fillGrad.Parent=barFill
+local shine=mkFrame(barFill,UDim2.fromOffset(70,20),UDim2.fromOffset(-70,0),Color3.new(1,1,1),0.5,12); corner(shine)
+local sg=Instance.new("UIGradient")
+sg.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0.4),NumberSequenceKeypoint.new(1,1)})
+sg.Rotation=90; sg.Parent=shine
+local percentLabel=mkLabel(barContainer,"0%",UDim2.fromScale(1,1),UDim2.fromScale(0,0),Color3.fromRGB(220,200,255),12,13)
+percentLabel.TextXAlignment=Enum.TextXAlignment.Center; percentLabel.TextYAlignment=Enum.TextYAlignment.Center
 
--- Fondo de la barra
-local barBg = createFrame(barContainer, UDim2.fromScale(1,1), UDim2.fromScale(0,0), Color3.fromRGB(5, 8, 20), 0, 10)
-local bbgc = Instance.new("UICorner"); bbgc.CornerRadius = UDim.new(1,0); bbgc.Parent = barBg
+-- SUBTITLE below bar
+local phaseLabel=mkLabel(root,"",UDim2.new(1,0,0,28),UDim2.new(0,0,0.50,22),Color3.fromRGB(100,180,255),15,11)
+phaseLabel.TextXAlignment=Enum.TextXAlignment.Center; phaseLabel.Font=Enum.Font.Gotham
 
--- Fill de la barra
-local barFill = createFrame(barContainer, UDim2.fromScale(0, 1), UDim2.fromScale(0,0), Color3.fromRGB(150, 30, 220), 0, 11)
-local bfc = Instance.new("UICorner"); bfc.CornerRadius = UDim.new(1,0); bfc.Parent = barFill
+-- Logo
+local logoIcon=Instance.new("Frame")
+logoIcon.Size=UDim2.fromOffset(68,68); logoIcon.Position=UDim2.new(0.5,-34,0,16)
+logoIcon.BackgroundColor3=Color3.fromRGB(18,18,36); logoIcon.BackgroundTransparency=0.1
+logoIcon.BorderSizePixel=0; logoIcon.ZIndex=12; logoIcon.Parent=root
+local lic=Instance.new("UICorner"); lic.CornerRadius=UDim.new(0.15,0); lic.Parent=logoIcon
+local liStroke=Instance.new("UIStroke"); liStroke.Color=Color3.fromRGB(130,60,220); liStroke.Thickness=1.5; liStroke.Transparency=0.1; liStroke.Parent=logoIcon
+local logoText=mkLabel(logoIcon,"🌀",UDim2.fromScale(1,1),UDim2.fromScale(0,0),Color3.new(1,1,1),36,13)
+logoText.TextXAlignment=Enum.TextXAlignment.Center; logoText.TextYAlignment=Enum.TextYAlignment.Center
 
-local fillGrad = Instance.new("UIGradient")
-fillGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 20, 180)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 60, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 140, 255)),
-})
-fillGrad.Parent = barFill
-
--- Shine (brillo que corre)
-local shine = Instance.new("Frame")
-shine.Size = UDim2.fromOffset(60, 22)
-shine.Position = UDim2.fromOffset(-60, 0)
-shine.BackgroundColor3 = Color3.new(1,1,1)
-shine.BackgroundTransparency = 0.6
-shine.BorderSizePixel = 0
-shine.ZIndex = 12
-shine.ClipsDescendants = false
-shine.Parent = barFill
-local sc = Instance.new("UICorner"); sc.CornerRadius = UDim.new(1,0); sc.Parent = shine
-local sg = Instance.new("UIGradient")
-sg.Transparency = NumberSequence.new({
-	NumberSequenceKeypoint.new(0, 1),
-	NumberSequenceKeypoint.new(0.5, 0.5),
-	NumberSequenceKeypoint.new(1, 1),
-})
-sg.Rotation = 90
-sg.Parent = shine
-
--- Porcentaje texto
-local percentLabel = createLabel(root, "0%",
-	UDim2.fromOffset(100, 30),
-	UDim2.new(0.5, -50, 0.86, 0),
-	Color3.fromRGB(180, 140, 255), 16, 12)
-percentLabel.TextXAlignment = Enum.TextXAlignment.Center
-
--- ============================================================
---  TEXTOS PRINCIPALES
--- ============================================================
--- Título con glow
-local titleLabel = createLabel(root, "",
-	UDim2.fromScale(1, 0),
-	UDim2.new(0, 0, 0.68, 0),
-	Color3.fromRGB(180, 60, 255), 46, 11)
-titleLabel.Size = UDim2.new(1, 0, 0, 60)
-titleLabel.TextXAlignment = Enum.TextXAlignment.Center
-
-local titleStroke = Instance.new("UIStroke")
-titleStroke.Color = Color3.fromRGB(140, 20, 220)
-titleStroke.Thickness = 1
-titleStroke.Transparency = 0.3
-titleStroke.Parent = titleLabel
-
--- Subtítulo / fase
-local phaseLabel = createLabel(root, "",
-	UDim2.new(1, 0, 0, 28),
-	UDim2.new(0, 0, 0.74, 0),
-	Color3.fromRGB(100, 180, 255), 18, 11)
-phaseLabel.TextXAlignment = Enum.TextXAlignment.Center
-phaseLabel.Font = Enum.Font.Gotham
-
--- Logo del script (esquina superior centro)
-local logoIcon = Instance.new("Frame")
-logoIcon.Size = UDim2.fromOffset(72, 72)
-logoIcon.Position = UDim2.new(0.5, -36, 0, 18)
-logoIcon.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-logoIcon.BackgroundTransparency = 0.1
-logoIcon.BorderSizePixel = 0
-logoIcon.ZIndex = 12
-logoIcon.Parent = root
-local lic = Instance.new("UICorner"); lic.CornerRadius = UDim.new(0.15, 0); lic.Parent = logoIcon
-local listroke = Instance.new("UIStroke")
-listroke.Color = Color3.fromRGB(130, 60, 220)
-listroke.Thickness = 1.5
-listroke.Transparency = 0.1
-listroke.Parent = logoIcon
-
-local logoText = createLabel(logoIcon, "⬛", UDim2.fromScale(1,1), UDim2.fromScale(0,0),
-	Color3.fromRGB(200, 200, 255), 36, 13)
-logoText.Text = "🌀"
-logoText.TextXAlignment = Enum.TextXAlignment.Center
-logoText.TextYAlignment = Enum.TextYAlignment.Center
-
--- ============================================================
---  TYPING EFFECT
--- ============================================================
-local PHASES = {
-	{text = "LOADING DUPEXX GALATIC SCRIPT", sub = "Initializing galactic systems...", color = Color3.fromRGB(180,60,255), barColor = nil},
-	{text = "INJECTING MODULES", sub = "Deploying cosmic payload...", color = Color3.fromRGB(60, 220, 120), barColor = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 180, 80)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(60, 220, 120)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 255, 180)),
-	})},
+-- Phases
+local PHASES={
+	{text="LOADING DUPEXX GALATIC SCRIPT",sub="▸  Initializing galactic systems...",color=Color3.fromRGB(180,60,255),barGrad=nil},
+	{text="INJECTING MODULES",sub="▸  Deploying cosmic payload...",color=Color3.fromRGB(60,220,130),
+		barGrad=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(20,180,80)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(60,220,120)),ColorSequenceKeypoint.new(1,Color3.fromRGB(100,255,180))})},
 }
-
-local currentPhase = 1
-local typingDone = false
-
-local function typeWrite(label, text, speed)
-	typingDone = false
-	label.Text = ""
-	for i = 1, #text do
-		label.Text = string.sub(text, 1, i)
-		task.wait(speed or 0.04)
-	end
-	typingDone = true
+local currentPhase=1
+local function typeWrite(label,text,speed)
+	label.Text=""
+	for i=1,#text do label.Text=string.sub(text,1,i); task.wait(speed or 0.045) end
 end
 
--- ============================================================
---  ANIMACIÓN PRINCIPAL (RenderStepped)
--- ============================================================
-local startTime = tick()
-local progress = 0
-local galaxyAngle = 0
-local lastJet = tick()
-
+-- Main loop
+local startTime=tick(); local progress=0; local lastJet=tick()
 local renderConn
-renderConn = RunService.RenderStepped:Connect(function(dt)
-	local t = tick()
-	local elapsed = t - startTime
-	galaxyAngle = galaxyAngle + dt * 0.18
-
-	-- Progreso de carga suavizado
-	local targetProgress = math.min(elapsed / CONFIG.LOADING_TIME, 1)
-	progress = lerp(progress, targetProgress, dt * 2.5)
-
-	-- Actualizar barra
-	barFill.Size = UDim2.fromScale(progress, 1)
-	percentLabel.Text = math.floor(progress * 100) .. "%"
-
-	-- Cambio de fase al 50%
-	if progress >= 0.5 and currentPhase == 1 then
-		currentPhase = 2
-		local ph = PHASES[2]
-		if ph.barColor then
-			fillGrad.Color = ph.barColor
+renderConn=RunService.RenderStepped:Connect(function(dt)
+	local t=tick(); local elapsed=t-startTime
+	galaxyAngle=galaxyAngle+dt*0.20
+	local target=math.min(elapsed/CONFIG.LOADING_TIME,1)
+	progress=lerp(progress,target,dt*2.2)
+	barFill.Size=UDim2.fromScale(progress,1)
+	percentLabel.Text=math.floor(progress*100).."%"
+	if progress>=0.50 and currentPhase==1 then
+		currentPhase=2; local ph=PHASES[2]
+		if ph.barGrad then fillGrad.Color=ph.barGrad end
+		titleLabel.TextColor3=ph.color
+		task.spawn(function() typeWrite(titleLabel,ph.text,0.055) end)
+		task.spawn(function() task.wait(0.4); phaseLabel.Text=ph.sub end)
+	end
+	for _,nd in ipairs(nebulas) do
+		nd.frame.BackgroundTransparency=0.88+math.sin(elapsed*nd.speed*0.4)*0.04
+	end
+	for _,sd in ipairs(stars) do
+		sd.age=sd.age+dt
+		local lp=(sd.age%sd.lifeTime)/sd.lifeTime
+		local blink=(math.sin(elapsed*sd.blinkSpeed+sd.blinkOffset)+1)*0.5
+		sd.frame.BackgroundTransparency=lerp(sd.baseAlpha,0.97,1-blink)
+		if lp>0.97 then sd.x=rand(0,1); sd.y=rand(0,1); sd.frame.Position=UDim2.fromScale(sd.x,sd.y) end
+	end
+	galaxyContainer.Rotation=galaxyAngle*(180/math.pi)
+	for _,pd in ipairs(orbitParticles) do
+		pd.angle=pd.angle+dt*pd.speed
+		local behind=math.sin(pd.angle)<0
+		local zF=behind and 0.78 or 1.0
+		local px=BHO+math.cos(pd.angle)*pd.radius*zF
+		local py=BHO+math.sin(pd.angle)*pd.radius*pd.yScale*zF
+		pd.frame.Position=UDim2.fromOffset(px-pd.size/2,py-pd.size/2)
+		pd.frame.BackgroundTransparency=behind and rand(0.5,0.78) or rand(0.05,0.28)
+		local ss=behind and pd.size*0.62 or pd.size
+		pd.frame.Size=UDim2.fromOffset(ss,ss)
+		pd.frame.ZIndex=behind and 12 or 18
+	end
+	if t-lastJet>=CONFIG.JET_INTERVAL then lastJet=t; task.spawn(fireJet) end
+	local gp=(math.sin(elapsed*2.2)+1)*0.5
+	titleStroke.Transparency=lerp(0.05,0.55,gp)
+	shine.Position=UDim2.fromScale((elapsed*0.55)%1.5-0.12,0)
+	liStroke.Transparency=lerp(0.0,0.5,(math.sin(elapsed*1.6)+1)*0.5)
+	if progress>=0.999 then
+		renderConn:Disconnect(); task.wait(0.6)
+		tw(root,1.3,{BackgroundTransparency=1},Enum.EasingStyle.Cubic,Enum.EasingDirection.In)
+		for _,d in ipairs(root:GetDescendants()) do
+			pcall(function()
+				if d:IsA("Frame") or d:IsA("ImageLabel") then tw(d,1.1,{BackgroundTransparency=1},Enum.EasingStyle.Cubic,Enum.EasingDirection.In) end
+				if d:IsA("TextLabel") then tw(d,1.1,{TextTransparency=1},Enum.EasingStyle.Cubic,Enum.EasingDirection.In) end
+			end)
 		end
-		titleLabel.TextColor3 = ph.color
-		task.spawn(function()
-			typeWrite(titleLabel, ph.text, 0.05)
-		end)
-		task.spawn(function()
-			task.wait(0.3)
-			phaseLabel.Text = ph.sub
-		end)
-	end
-
-	-- Nebulosas: rotación lenta
-	for _, nd in ipairs(nebulas) do
-		local rotSpeed = nd.speed * 12
-		local newRot = nd.baseRot + elapsed * rotSpeed
-		-- No podemos rotar frames directamente, pero animamos posición ligeramente
-		local wobble = math.sin(elapsed * nd.speed) * 0.005
-		nd.frame.Position = UDim2.fromScale(
-			nd.frame.Position.X.Scale + wobble * dt,
-			nd.frame.Position.Y.Scale
-		)
-		-- Pulso de opacidad
-		local pulse = 0.88 + math.sin(elapsed * nd.speed * 0.5) * 0.04
-		nd.frame.BackgroundTransparency = pulse
-	end
-
-	-- Estrellas: parpadeo y reaparición
-	for _, sd in ipairs(stars) do
-		sd.age = sd.age + dt
-		local lifeProgress = (sd.age % sd.lifeTime) / sd.lifeTime
-		local blink = math.abs(math.sin(elapsed * sd.blinkSpeed + sd.blinkOffset))
-		sd.frame.BackgroundTransparency = lerp(sd.baseAlpha, 1, 1 - blink)
-		-- Reaparece en otro lugar al morir
-		if lifeProgress > 0.98 then
-			sd.x = rand(0, 1)
-			sd.y = rand(0, 1)
-			sd.frame.Position = UDim2.fromScale(sd.x, sd.y)
-		end
-	end
-
-	-- Galaxia: rotación orbital
-	galaxyContainer.Rotation = galaxyAngle * (180 / math.pi)
-
-	-- Partículas del agujero negro
-	for _, pd in ipairs(orbitParticles) do
-		pd.angle = pd.angle + dt * pd.speed
-
-		-- Trayectoria elíptica con curvatura gravitacional
-		local rawX = math.cos(pd.angle) * pd.radius
-		local rawY = math.sin(pd.angle) * pd.radius * pd.yScale
-
-		-- Simular curvatura: partículas se "hunden" detrás
-		local behind = math.sin(pd.angle) < 0
-		local zFactor = behind and 0.85 or 1.0
-		local px = 210 + rawX * zFactor
-		local py = 210 + rawY * zFactor
-
-		pd.frame.Position = UDim2.fromOffset(px - pd.size/2, py - pd.size/2)
-
-		-- Transparencia basada en profundidad
-		local depthAlpha = behind and rand(0.4, 0.7) or rand(0.05, 0.35)
-		pd.frame.BackgroundTransparency = depthAlpha
-
-		-- Tamaño varía con profundidad (perspectiva)
-		local scaledSize = behind and pd.size * 0.7 or pd.size
-		pd.frame.Size = UDim2.fromOffset(scaledSize, scaledSize)
-		pd.frame.ZIndex = behind and 14 or 17
-	end
-
-	-- Jets cada 30 segundos
-	if t - lastJet >= CONFIG.JET_INTERVAL then
-		lastJet = t
-		task.spawn(fireJet)
-	end
-
-	-- Glow del título (pulso)
-	local glowPulse = (math.sin(elapsed * 2.5) + 1) / 2
-	titleStroke.Transparency = lerp(0.1, 0.6, glowPulse)
-
-	-- Shine en la barra
-	local shinePos = (elapsed * 0.6) % 1.4 - 0.2
-	shine.Position = UDim2.fromScale(shinePos, 0)
-
-	-- Logo pulso
-	local logoPulse = (math.sin(elapsed * 1.8) + 1) / 2
-	listroke.Transparency = lerp(0.0, 0.5, logoPulse)
-
-	-- Fin de carga
-	if progress >= 0.999 then
-		renderConn:Disconnect()
-		task.wait(0.8)
-		-- Fade out final
-		tween(root, 1.2, {BackgroundTransparency = 1}, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-		for _, desc in ipairs(root:GetDescendants()) do
-			if desc:IsA("Frame") or desc:IsA("TextLabel") or desc:IsA("ImageLabel") then
-				pcall(function()
-					tween(desc, 1.0, {BackgroundTransparency = 1}, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-					if desc:IsA("TextLabel") then
-						tween(desc, 1.0, {TextTransparency = 1}, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-					end
-				end)
-			end
-		end
-		task.wait(1.5)
-		screenGui:Destroy()
+		task.wait(1.6); screenGui:Destroy()
 	end
 end)
 
--- ============================================================
---  INICIO — Typing del título fase 1
--- ============================================================
-task.spawn(function()
-	task.wait(0.3)
-	typeWrite(titleLabel, PHASES[1].text, 0.045)
-	phaseLabel.Text = PHASES[1].sub
-end)
-
--- Primer jet inmediato
-task.spawn(function()
-	task.wait(2)
-	fireJet()
-end)
-
--- ============================================================
---  FIN DEL SCRIPT
--- ============================================================
+task.spawn(function() task.wait(0.25); typeWrite(titleLabel,PHASES[1].text,0.045); phaseLabel.Text=PHASES[1].sub end)
+task.spawn(function() task.wait(1.5); fireJet() end)
