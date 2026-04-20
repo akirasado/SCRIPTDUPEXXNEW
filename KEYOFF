@@ -90,81 +90,87 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
--- 🕳️ AGUJERO NEGRO (INTERSTELLAR STYLE FINAL)
+-- 🕳️ AGUJERO NEGRO REALISTA (FLUIDO INTERSTELLAR)
 --==================================================
 
 local blackHole = Instance.new("Frame", bg)
-blackHole.Size = UDim2.fromOffset(75,75) -- 🔻 más pequeño
-blackHole.Position = UDim2.fromScale(0.32,0.70) -- 📍 mejor centrado y sin tocar nada
+blackHole.Size = UDim2.fromOffset(85,85)
+blackHole.Position = UDim2.fromScale(0.34,0.72)
 blackHole.AnchorPoint = Vector2.new(0.5,0.5)
 blackHole.BackgroundTransparency = 1
 
--- 🖤 NÚCLEO (negro absoluto)
+-- 🖤 NÚCLEO
 local core = Instance.new("Frame", blackHole)
-core.Size = UDim2.fromScale(0.42,0.42)
+core.Size = UDim2.fromScale(0.4,0.4)
 core.Position = UDim2.fromScale(0.5,0.5)
 core.AnchorPoint = Vector2.new(0.5,0.5)
 core.BackgroundColor3 = Color3.fromRGB(0,0,0)
 core.BorderSizePixel = 0
 Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
 
--- 🌀 DISCO DE ACRECIÓN (CAPA 1 - interior)
-local disk1 = Instance.new("Frame", blackHole)
-disk1.Size = UDim2.fromScale(0.75,0.75)
-disk1.Position = UDim2.fromScale(0.5,0.5)
-disk1.AnchorPoint = Vector2.new(0.5,0.5)
-disk1.BackgroundTransparency = 1
+-- 🌊 DISCO DE ACRECIÓN (SIMULACIÓN FLUIDA)
+local disk = Instance.new("Frame", blackHole)
+disk.Size = UDim2.fromScale(1,1)
+disk.Position = UDim2.fromScale(0.5,0.5)
+disk.AnchorPoint = Vector2.new(0.5,0.5)
+disk.BackgroundTransparency = 1
 
-local grad1 = Instance.new("UIGradient", disk1)
-grad1.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,200,255)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(160,80,255)),
+local grad = Instance.new("UIGradient", disk)
+grad.Rotation = 0
+
+grad.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(80,140,255)), -- azul neón
+	ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255,255,255)), -- brillo
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,200,120)), -- dorado
+	ColorSequenceKeypoint.new(0.7, Color3.fromRGB(120,60,255)), -- violeta
 	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
 }
-grad1.Transparency = NumberSequence.new{
-	NumberSequenceKeypoint.new(0,0.3),
+
+grad.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0,0.2),
+	NumberSequenceKeypoint.new(0.5,0.4),
 	NumberSequenceKeypoint.new(1,1)
 }
 
--- 🌀 DISCO DE ACRECIÓN (CAPA 2 - exterior glow)
-local disk2 = Instance.new("Frame", blackHole)
-disk2.Size = UDim2.fromScale(1.1,1.1)
-disk2.Position = UDim2.fromScale(0.5,0.5)
-disk2.AnchorPoint = Vector2.new(0.5,0.5)
-disk2.BackgroundTransparency = 1
-
-local grad2 = Instance.new("UIGradient", disk2)
-grad2.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(120,60,255)),
-	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
-}
-grad2.Transparency = NumberSequence.new{
-	NumberSequenceKeypoint.new(0,0.6),
-	NumberSequenceKeypoint.new(1,1)
-}
-
--- 💫 ANILLO FINO (detalle)
+-- 🔵 ANILLO CIRCULAR REAL
 local ring = Instance.new("Frame", blackHole)
-ring.Size = UDim2.fromScale(0.9,0.9)
+ring.Size = UDim2.fromScale(0.75,0.75)
 ring.Position = UDim2.fromScale(0.5,0.5)
 ring.AnchorPoint = Vector2.new(0.5,0.5)
 ring.BackgroundTransparency = 1
 
 local stroke = Instance.new("UIStroke", ring)
-stroke.Thickness = 2
-stroke.Color = Color3.fromRGB(220,160,255)
-stroke.Transparency = 0.2
+stroke.Thickness = 3
+stroke.Color = Color3.fromRGB(100,180,255) -- azul neón
+stroke.Transparency = 0.1
 
--- 🔄 inclinación estilo interstellar
-disk1.Rotation = 20
-disk2.Rotation = -15
-ring.Rotation = 25
+-- ✨ partículas blancas en el anillo (detalle)
+for i = 1,12 do
+	local p = Instance.new("Frame", ring)
+	p.Size = UDim2.fromOffset(2,2)
+	p.AnchorPoint = Vector2.new(0.5,0.5)
 
--- 🌪️ rotación independiente (más realista)
+	local angle = (i/12) * math.pi * 2
+	local radius = 30
+
+	p.Position = UDim2.new(
+		0.5 + math.cos(angle)*0.35,
+		0,
+		0.5 + math.sin(angle)*0.35,
+		0
+	)
+
+	p.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	p.BorderSizePixel = 0
+end
+
+-- 🌪️ EFECTO DE CORRIENTE (CLAVE)
 RunService.RenderStepped:Connect(function(dt)
-	disk1.Rotation += dt * 10
-	disk2.Rotation -= dt * 6
-	ring.Rotation += dt * 8
+	-- flujo del disco (esto hace el efecto "agua")
+	grad.Rotation += dt * 120
+	
+	-- rotación ligera del anillo
+	ring.Rotation += dt * 15
 end)
 
 --==================================================
