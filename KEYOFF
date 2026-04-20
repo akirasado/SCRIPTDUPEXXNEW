@@ -151,41 +151,23 @@ core.BorderSizePixel = 0
 Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
 
 -- 🌪️ ANIMACIÓN (CLAVE)
-RunService.RenderStepped:Connect(function(dt)
-
-	for _,p in ipairs(front) do
+RunService.RenderStepped:Connect(function()
+	for _,p in ipairs(particles) do
 		p.angle += p.speed
 
 		local sin = math.sin(p.angle)
 		local cos = math.cos(p.angle)
 
-		-- órbita base (elipse)
+		-- órbita elíptica (vista lateral)
 		local x = center.X + cos * p.radius
 		local y = center.Y + sin * (p.radius * 0.35)
 
-		-- 🌀 EFECTO CURVATURA (clave)
+		-- efecto curvatura simple (cuando va atrás)
 		if sin < 0 then
-			-- parte "detrás" → se curva hacia arriba
-			y -= 10 * math.abs(sin) -- sube
+			y -= 8 -- sube un poco
 		end
 
-		p.frame.Position = UDim2.fromOffset(x,y)
-	end
-
-	for _,p in ipairs(back) do
-		p.angle += p.speed
-
-		local sin = math.sin(p.angle)
-		local cos = math.cos(p.angle)
-
-		local x = center.X + cos * p.radius
-		local y = center.Y + sin * (p.radius * 0.35)
-
-		if sin < 0 then
-			y -= 10 * math.abs(sin)
-		end
-
-		p.frame.Position = UDim2.fromOffset(x,y)
+		p.frame.Position = UDim2.fromOffset(x, y)
 	end
 end)
 
