@@ -90,7 +90,7 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
--- 🕳️ AGUJERO NEGRO (PIXEL / CUADROS REALISTA)
+-- 🕳️ AGUJERO NEGRO LATERAL (INTERSTELLAR OPTIMIZADO)
 --==================================================
 
 local blackHole = Instance.new("Frame", bg)
@@ -99,71 +99,91 @@ blackHole.Position = UDim2.fromScale(0.35,0.72)
 blackHole.AnchorPoint = Vector2.new(0.5,0.5)
 blackHole.BackgroundTransparency = 1
 
-local particles = {}
-
 local center = Vector2.new(60,60)
 
--- CONFIG
-local total = 180
+-- 🔻 MENOS PARTÍCULAS (optimización)
+local TOTAL = 90
 
-for i = 1, total do
-	local p = Instance.new("Frame")
-	p.Size = UDim2.fromOffset(2,2)
-	p.BorderSizePixel = 0
-	p.BackgroundColor3 = Color3.fromRGB(80,120,255)
-	p.Parent = blackHole
+local front = {} -- parte visible abajo
+local back = {}  -- parte que "pasa arriba"
 
-	-- distribución tipo disco
-	local angle = math.random() * math.pi * 2
-	local radius = math.random(20,55)
+local function createParticle(parentTable, isFront)
+	for i = 1, TOTAL/2 do
+		local p = Instance.new("Frame")
+		p.Size = UDim2.fromOffset(3,3) -- 🔺 más grandes
+		p.BorderSizePixel = 0
+		p.Parent = blackHole
 
-	local x = center.X + math.cos(angle) * radius
-	local y = center.Y + math.sin(angle) * radius
+		local angle = math.random() * math.pi * 2
+		local radius = math.random(25,55)
 
-	p.Position = UDim2.fromOffset(x,y)
+		-- colores realistas
+		local r = math.random()
+		if r < 0.2 then
+			p.BackgroundColor3 = Color3.fromRGB(255,255,255)
+		elseif r < 0.4 then
+			p.BackgroundColor3 = Color3.fromRGB(255,200,120)
+		elseif r < 0.7 then
+			p.BackgroundColor3 = Color3.fromRGB(120,80,255)
+		else
+			p.BackgroundColor3 = Color3.fromRGB(80,120,255)
+		end
 
-	-- colores variados (realismo)
-	local r = math.random()
-	if r < 0.2 then
-		p.BackgroundColor3 = Color3.fromRGB(255,255,255) -- brillo
-	elseif r < 0.4 then
-		p.BackgroundColor3 = Color3.fromRGB(255,200,120) -- dorado
-	elseif r < 0.7 then
-		p.BackgroundColor3 = Color3.fromRGB(120,80,255) -- violeta
-	else
-		p.BackgroundColor3 = Color3.fromRGB(80,120,255) -- azul
+		table.insert(parentTable, {
+			frame = p,
+			angle = angle,
+			radius = radius,
+			speed = math.random(3,8)/100 -- 🔻 más lento
+		})
 	end
-
-	table.insert(particles, {
-		frame = p,
-		angle = angle,
-		radius = radius,
-		speed = math.random(5,15)/100 -- velocidad distinta
-	})
 end
 
--- núcleo negro
+createParticle(front, true)
+createParticle(back, false)
+
+-- 🖤 NÚCLEO
 local core = Instance.new("Frame", blackHole)
-core.Size = UDim2.fromOffset(30,30)
+core.Size = UDim2.fromOffset(32,32)
 core.Position = UDim2.fromOffset(center.X, center.Y)
 core.AnchorPoint = Vector2.new(0.5,0.5)
 core.BackgroundColor3 = Color3.fromRGB(0,0,0)
 core.BorderSizePixel = 0
-
 Instance.new("UICorner", core).CornerRadius = UDim.new(1,0)
 
--- animación tipo flujo (CLAVE)
+-- 🌪️ ANIMACIÓN (CLAVE)
 RunService.RenderStepped:Connect(function(dt)
-	for _,p in ipairs(particles) do
+
+	-- 🔵 PARTE TRASERA (arriba)
+	for _,p in ipairs(back) do
 		p.angle += p.speed
 
-		-- ligera distorsión (no perfecto)
-		local wobble = math.sin(tick()*2 + p.radius) * 2
+		-- perspectiva elíptica (vista lateral)
+		local x = center.X + math.cos(p.angle) * p.radius
+		local y = center.Y + math.sin(p.angle) * (p.radius * 0.35)
 
-		local x = center.X + math.cos(p.angle) * (p.radius + wobble)
-		local y = center.Y + math.sin(p.angle) * (p.radius + wobble)
+		-- SOLO parte superior
+		if math.sin(p.angle) < 0 then
+			p.frame.Visible = true
+			p.frame.Position = UDim2.fromOffset(x,y)
+		else
+			p.frame.Visible = false
+		end
+	end
 
-		p.frame.Position = UDim2.fromOffset(x,y)
+	-- 🔵 PARTE FRONTAL (abajo)
+	for _,p in ipairs(front) do
+		p.angle += p.speed
+
+		local x = center.X + math.cos(p.angle) * p.radius
+		local y = center.Y + math.sin(p.angle) * (p.radius * 0.35)
+
+		-- SOLO parte inferior
+		if math.sin(p.angle) >= 0 then
+			p.frame.Visible = true
+			p.frame.Position = UDim2.fromOffset(x,y)
+		else
+			p.frame.Visible = false
+		end
 	end
 end)
 
