@@ -4,7 +4,6 @@ local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 
--- GUI Principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
@@ -13,152 +12,80 @@ screenGui.Parent = playerGui
 
 local background = Instance.new("Frame")
 background.Size = UDim2.new(1, 0, 1, 0)
-background.BackgroundColor3 = Color3.fromRGB(5, 0, 18) -- Fondo oscuro elegante
+background.BackgroundColor3 = Color3.fromRGB(8, 2, 25)  -- Azul marino oscuro bonito
 background.Parent = screenGui
 
--- Blur suave
-local blur = Instance.new("BlurEffect")
-blur.Size = 20
-blur.Parent = Lighting
-
--- Borde neon bonito
+-- Borde neon
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(130, 0, 255)
-stroke.Thickness = 7
-stroke.Transparency = 0.2
+stroke.Color = Color3.fromRGB(140, 0, 255)
+stroke.Thickness = 8
 stroke.Parent = background
 
--- === NEBULOSAS SUAVES ===
-local function crearNebulosa(c1, c2, vel)
-	local neb = Instance.new("Frame")
-	neb.Size = UDim2.new(1.9, 0, 1.9, 0)
-	neb.Position = UDim2.new(-0.45, 0, -0.45, 0)
-	neb.BackgroundTransparency = 1
-	neb.Parent = background
-
-	local grad = Instance.new("UIGradient")
-	grad.Color = ColorSequence.new{c1, c2}
-	grad.Transparency = NumberSequence.new{0.25, 1}
-	grad.Rotation = math.random(0, 360)
-	grad.Parent = neb
-
-	local tweenInfo = TweenInfo.new(vel, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
-	
-	task.spawn(function()
-		while neb and neb.Parent do
-			local pos = UDim2.new(math.random(-42, -8)/100, 0, math.random(-42, -8)/100, 0)
-			TweenService:Create(neb, tweenInfo, {Position = pos}):Play()
-			task.wait(vel * 0.75)
-		end
-	end)
-end
-
-crearNebulosa(Color3.fromRGB(90, 10, 160), Color3.fromRGB(10, 130, 190), 58)
-crearNebulosa(Color3.fromRGB(50, 20, 140), Color3.fromRGB(120, 20, 210), 82)
-
--- === ESTRELLAS ===
-for i = 1, 35 do
-	local star = Instance.new("Frame")
-	star.Size = UDim2.new(0, math.random(3,6), 0, math.random(3,6))
-	star.Position = UDim2.new(math.random(), 0, math.random(), 0)
-	star.BackgroundColor3 = Color3.fromRGB(215, 225, 255)
-	star.BorderSizePixel = 0
-	star.Parent = background
-
-	local ti = TweenInfo.new(math.random(2, 5), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1)
-	task.spawn(function()
-		while star and star.Parent do
-			TweenService:Create(star, ti, {BackgroundTransparency = math.random(15, 75)/100}):Play()
-			task.wait(math.random(2,5))
-		end
-	end)
-end
-
--- Texto
+-- Texto (lo más importante)
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0.24,0)
-title.Position = UDim2.new(0,0,0.30,0)
+title.Size = UDim2.new(1, 0, 0.25, 0)
+title.Position = UDim2.new(0, 0, 0.32, 0)
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(200, 50, 255)
+title.TextColor3 = Color3.fromRGB(200, 40, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBlack
-title.Text = ""
+title.Text = "LOADING DUPEXX GALATIC SCRIPT..."
 title.Parent = background
 
-local function typeText(label, text)
-	label.Text = ""
-	for i = 1, #text do
-		label.Text = string.sub(text, 1, i)
-		task.wait(0.055)
-	end
-end
-
--- Barra elegante
+-- Barra
 local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0.68,0,0.07,0)
-barBg.Position = UDim2.new(0.16,0,0.53,0)
-barBg.BackgroundColor3 = Color3.fromRGB(35, 25, 70)
+barBg.Size = UDim2.new(0.7, 0, 0.08, 0)
+barBg.Position = UDim2.new(0.15, 0, 0.55, 0)
+barBg.BackgroundColor3 = Color3.fromRGB(40, 30, 80)
 barBg.Parent = background
 
 local bar = Instance.new("Frame")
-bar.Size = UDim2.new(0,0,1,0)
-bar.BackgroundColor3 = Color3.fromRGB(255, 60, 200)
+bar.Size = UDim2.new(0, 0, 1, 0)
+bar.BackgroundColor3 = Color3.fromRGB(255, 80, 200)
 bar.Parent = barBg
 
-local glow = Instance.new("UIStroke")
-glow.Color = Color3.fromRGB(255, 140, 255)
-glow.Thickness = 6
-glow.Parent = bar
-
 local percent = Instance.new("TextLabel")
-percent.Size = UDim2.new(1,0,0.09,0)
-percent.Position = UDim2.new(0,0,0.63,0)
+percent.Size = UDim2.new(1, 0, 0.1, 0)
+percent.Position = UDim2.new(0, 0, 0.67, 0)
 percent.BackgroundTransparency = 1
 percent.TextColor3 = Color3.fromRGB(220, 220, 255)
 percent.TextScaled = true
 percent.Text = "0%"
 percent.Parent = background
 
--- Música (solo se escucha la música galáctica)
+-- Música
 local sound = Instance.new("Sound")
 sound.SoundId = "rbxassetid://1843529635"
 sound.Looped = true
-sound.Volume = 0.92
+sound.Volume = 0.9
 sound.Parent = background
 sound:Play()
 
--- Función de carga
+-- Función de carga simple
 local function runLoading(duration, color)
 	local start = tick()
 	bar.BackgroundColor3 = color
-	glow.Color = color
 	
 	while true do
 		local p = math.clamp((tick() - start) / duration, 0, 1)
 		bar.Size = UDim2.new(p, 0, 1, 0)
 		percent.Text = math.floor(p * 100) .. "%"
 		if p >= 1 then break end
-		task.wait(0.06)
+		task.wait(0.08)
 	end
 end
 
 -- Ejecución
-typeText(title, "LOADING DUPEXX GALATIC SCRIPT")
-runLoading(300, Color3.fromRGB(255, 70, 180))   -- 5 minutos
+runLoading(300, Color3.fromRGB(255, 80, 200))   -- 5 minutos primera fase
 
 bar.Size = UDim2.new(0, 0, 1, 0)
+title.Text = "INJECTING DUPEXX GALACTIC SCRIPT"
 
-typeText(title, "INJECTING DUPEXX GALACTIC SCRIPT")
-
-sound:Stop()
 sound.SoundId = "rbxassetid://9129997143"
 sound:Play()
 
-runLoading(240, Color3.fromRGB(90, 255, 160))   -- 4 minutos
+runLoading(240, Color3.fromRGB(100, 255, 170))  -- 4 minutos segunda fase
 
--- Pantalla final (se queda bonita)
+-- Final
 title.Text = "DUPEXX GALACTIC SCRIPT\nINJECTED SUCCESSFULLY"
-percent.Text = "100% - FULLY LOADED"
-
--- Se queda visible 10 minutos más
-task.wait(600)
+percent.Text = "100% - LOADED"
