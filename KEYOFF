@@ -1,8 +1,6 @@
-task.wait(3)
+task.wait(4)
 
 local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
@@ -10,82 +8,82 @@ screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
-local background = Instance.new("Frame")
-background.Size = UDim2.new(1, 0, 1, 0)
-background.BackgroundColor3 = Color3.fromRGB(8, 2, 25)  -- Azul marino oscuro bonito
-background.Parent = screenGui
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(8, 2, 25)
+bg.Parent = screenGui
 
--- Borde neon
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(140, 0, 255)
-stroke.Thickness = 8
-stroke.Parent = background
-
--- Texto (lo más importante)
+-- TEXTO SIMPLE
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0.25, 0)
-title.Position = UDim2.new(0, 0, 0.32, 0)
+title.Size = UDim2.new(1, 0, 0.3, 0)
+title.Position = UDim2.new(0, 0, 0.25, 0)
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(200, 40, 255)
+title.TextColor3 = Color3.fromRGB(210, 50, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBlack
 title.Text = "LOADING DUPEXX GALATIC SCRIPT..."
-title.Parent = background
+title.Parent = bg
 
--- Barra
+-- BARRA SIMPLE
 local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0.7, 0, 0.08, 0)
-barBg.Position = UDim2.new(0.15, 0, 0.55, 0)
-barBg.BackgroundColor3 = Color3.fromRGB(40, 30, 80)
-barBg.Parent = background
+barBg.Size = UDim2.new(0.75, 0, 0.08, 0)
+barBg.Position = UDim2.new(0.125, 0, 0.55, 0)
+barBg.BackgroundColor3 = Color3.fromRGB(40, 30, 75)
+barBg.Parent = bg
 
 local bar = Instance.new("Frame")
 bar.Size = UDim2.new(0, 0, 1, 0)
-bar.BackgroundColor3 = Color3.fromRGB(255, 80, 200)
+bar.BackgroundColor3 = Color3.fromRGB(255, 70, 190)
 bar.Parent = barBg
 
 local percent = Instance.new("TextLabel")
-percent.Size = UDim2.new(1, 0, 0.1, 0)
-percent.Position = UDim2.new(0, 0, 0.67, 0)
+percent.Size = UDim2.new(1, 0, 0.12, 0)
+percent.Position = UDim2.new(0, 0, 0.68, 0)
 percent.BackgroundTransparency = 1
-percent.TextColor3 = Color3.fromRGB(220, 220, 255)
+percent.TextColor3 = Color3.fromRGB(255, 255, 255)
 percent.TextScaled = true
 percent.Text = "0%"
-percent.Parent = background
+percent.Parent = bg
 
 -- Música
 local sound = Instance.new("Sound")
 sound.SoundId = "rbxassetid://1843529635"
 sound.Looped = true
 sound.Volume = 0.9
-sound.Parent = background
+sound.Parent = bg
 sound:Play()
 
--- Función de carga simple
-local function runLoading(duration, color)
-	local start = tick()
-	bar.BackgroundColor3 = color
+print("Script cargado - Debería verse texto y barra")
+
+-- Barra de carga simple (8 minutos)
+local startTime = tick()
+local totalTime = 480
+
+while true do
+	local progress = math.clamp((tick() - startTime) / totalTime, 0, 1)
+	bar.Size = UDim2.new(progress, 0, 1, 0)
+	percent.Text = math.floor(progress * 100) .. "%"
 	
-	while true do
-		local p = math.clamp((tick() - start) / duration, 0, 1)
-		bar.Size = UDim2.new(p, 0, 1, 0)
-		percent.Text = math.floor(p * 100) .. "%"
-		if p >= 1 then break end
-		task.wait(0.08)
-	end
+	if progress >= 1 then break end
+	task.wait(0.1)
 end
 
--- Ejecución
-runLoading(300, Color3.fromRGB(255, 80, 200))   -- 5 minutos primera fase
-
-bar.Size = UDim2.new(0, 0, 1, 0)
 title.Text = "INJECTING DUPEXX GALACTIC SCRIPT"
-
 sound.SoundId = "rbxassetid://9129997143"
 sound:Play()
 
-runLoading(240, Color3.fromRGB(100, 255, 170))  -- 4 minutos segunda fase
+-- Segunda fase
+startTime = tick()
+totalTime = 180
 
--- Final
-title.Text = "DUPEXX GALACTIC SCRIPT\nINJECTED SUCCESSFULLY"
-percent.Text = "100% - LOADED"
+while true do
+	local progress = math.clamp((tick() - startTime) / totalTime, 0, 1)
+	bar.Size = UDim2.new(progress, 0, 1, 0)
+	percent.Text = math.floor(progress * 100) .. "%"
+	
+	if progress >= 1 then break end
+	task.wait(0.1)
+end
+
+title.Text = "DUPEXX GALACTIC SCRIPT INJECTED SUCCESSFULLY"
+percent.Text = "100%"
