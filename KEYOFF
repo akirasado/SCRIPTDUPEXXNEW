@@ -1,98 +1,111 @@
---// CONFIG
+--// CONFIG ----------------------------------
 local loadingText1 = "LOADING DUPEXX GALATIC SCRIPT"
 local loadingText2 = "INJECTING DUPEXX GALACTIC SCRIPT"
 local loadTime1 = 300
 local loadTime2 = 180
 local typingSpeed = 0.035
 
---// SERVICES
+--// SERVICES --------------------------------
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 
---// GUI
-local gui = Instance.new("ScreenGui", playerGui)
+--// GUI -------------------------------------
+local gui = Instance.new("ScreenGui")
 gui.IgnoreGuiInset = true
+gui.Parent = playerGui
 
-local bg = Instance.new("Frame", gui)
+local bg = Instance.new("Frame")
 bg.Size = UDim2.fromScale(1,1)
 bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
+bg.Parent = gui
 
 -- Blur
-Instance.new("BlurEffect", Lighting).Size = 15
+local blur = Instance.new("BlurEffect")
+blur.Size = 15
+blur.Parent = Lighting
 
---// 🌌 GALAXIA REALISTA
-local galaxy = Instance.new("Frame", bg)
+--==================================================
+-- 🌌 GALAXIA MEJORADA
+--==================================================
+
+local galaxy = Instance.new("Frame")
 galaxy.Size = UDim2.fromOffset(220,220)
 galaxy.Position = UDim2.fromScale(0.75,0.25)
 galaxy.AnchorPoint = Vector2.new(0.5,0.5)
 galaxy.BackgroundTransparency = 1
+galaxy.Parent = bg
 
 -- núcleo
-for i = 1,40 do
-	local s = Instance.new("Frame", galaxy)
-	local size = math.random(2,5)
-	s.Size = UDim2.fromOffset(size,size)
-	s.Position = UDim2.fromOffset(math.random(-10,10),math.random(-10,10))
+for i = 1,50 do
+	local s = Instance.new("Frame")
+	s.Size = UDim2.fromOffset(math.random(2,4),math.random(2,4))
+	s.Position = UDim2.new(0.5, (math.random()-0.5)*20, 0.5, (math.random()-0.5)*20)
 	s.AnchorPoint = Vector2.new(0.5,0.5)
 	s.BackgroundColor3 = Color3.fromRGB(220,220,255)
-	s.BackgroundTransparency = math.random(1,3)/10
+	s.BackgroundTransparency = math.random(1,4)/10
 	s.BorderSizePixel = 0
+	s.Parent = galaxy
 end
 
--- brazos espirales DOBLES
+-- brazos espirales
 for arm = 0,1 do
-	for i = 1,140 do
-		local star = Instance.new("Frame", galaxy)
+	for i = 1,120 do
+		local star = Instance.new("Frame")
 
-		local t = i/20
+		local t = i / 15
 		local angle = t + (arm * math.pi)
-		local radius = t * 6
+		local radius = t * 5
+		local noise = (math.random() - 0.5) * 3
 
-		local x = math.cos(angle) * radius
-		local y = math.sin(angle) * radius
+		local x = math.cos(angle) * (radius + noise)
+		local y = math.sin(angle) * (radius + noise)
 
 		star.Size = UDim2.fromOffset(2,2)
 		star.Position = UDim2.new(0.5, x, 0.5, y)
 		star.BackgroundColor3 = Color3.fromRGB(180,180,255)
-		star.BackgroundTransparency = 0.4 + (i/200)
+		star.BackgroundTransparency = 0.4 + (i/180)
 		star.BorderSizePixel = 0
+		star.Parent = galaxy
 	end
 end
 
--- rotación suave continua
-task.spawn(function()
-	while true do
-		galaxy.Rotation += 0.02
-		task.wait()
-	end
+-- rotación suave
+RunService.RenderStepped:Connect(function(dt)
+	galaxy.Rotation += dt * 2
 end)
 
---// ⭐ ESTRELLAS SUAVES
+--==================================================
+-- ⭐ ESTRELLAS (SIN DUPLICADOS)
+--==================================================
+
 local stars = {}
 
 for i = 1,100 do
-	local s = Instance.new("Frame", bg)
-	local size = math.random(2,4)
-	s.Size = UDim2.fromOffset(size,size)
-	s.Position = UDim2.fromScale(math.random(),math.random())
+	local s = Instance.new("Frame")
+
+	local x = math.random(0,1000)/1000
+	local y = math.random(0,1000)/1000
+
+	s.Size = UDim2.fromOffset(math.random(2,4),math.random(2,4))
+	s.Position = UDim2.fromScale(x,y)
 	s.BackgroundColor3 = Color3.fromRGB(200,200,255)
 	s.BackgroundTransparency = math.random(4,8)/10
 	s.BorderSizePixel = 0
+	s.Parent = bg
+
 	table.insert(stars, s)
 end
 
--- animación fluida SIN saltos
+-- fade suave
 task.spawn(function()
 	while true do
 		for _,s in ipairs(stars) do
-			local target = math.clamp(
-				s.BackgroundTransparency + (math.random(-5,5)/100),
-				0.3,0.9
-			)
+			local target = math.random(30,90)/100
 
-			TweenService:Create(s, TweenInfo.new(0.25), {
+			TweenService:Create(s, TweenInfo.new(0.4), {
 				BackgroundTransparency = target
 			}):Play()
 		end
@@ -100,20 +113,25 @@ task.spawn(function()
 	end
 end)
 
---// TEXTO
-local title = Instance.new("TextLabel", bg)
+--==================================================
+-- ✨ TEXTO
+--==================================================
+
+local title = Instance.new("TextLabel")
 title.Size = UDim2.fromScale(1,0.2)
 title.Position = UDim2.fromScale(0,0.35)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(170,0,255)
 title.TextScaled = true
 title.Font = Enum.Font.SourceSansBold
+title.Parent = bg
 
--- glow suave
-local stroke = Instance.new("UIStroke", title)
+-- glow
+local stroke = Instance.new("UIStroke")
 stroke.Color = Color3.fromRGB(255,255,255)
 stroke.Thickness = 1.5
 stroke.Transparency = 0.4
+stroke.Parent = title
 
 task.spawn(function()
 	while true do
@@ -133,36 +151,71 @@ local function typeText(label,text)
 	end
 end
 
---// BARRA BONITA (OVALADA)
-local barBg = Instance.new("Frame", bg)
+--==================================================
+-- 📊 BARRA PRO
+--==================================================
+
+local barBg = Instance.new("Frame")
 barBg.Size = UDim2.fromScale(0.6,0.05)
 barBg.Position = UDim2.fromScale(0.2,0.55)
 barBg.BackgroundColor3 = Color3.fromRGB(40,40,70)
+barBg.Parent = bg
 
-local corner = Instance.new("UICorner", barBg)
-corner.CornerRadius = UDim.new(1,0)
+Instance.new("UICorner", barBg).CornerRadius = UDim.new(1,0)
 
-local bar = Instance.new("Frame", barBg)
+local bar = Instance.new("Frame")
 bar.Size = UDim2.new(0,0,1,0)
 bar.BackgroundColor3 = Color3.fromRGB(255,0,0)
+bar.Parent = barBg
 
-local corner2 = Instance.new("UICorner", bar)
-corner2.CornerRadius = UDim.new(1,0)
+Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
 
-local glow = Instance.new("UIStroke", bar)
+local glow = Instance.new("UIStroke")
 glow.Thickness = 2
 glow.Color = bar.BackgroundColor3
+glow.Parent = bar
+
+-- gradiente
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255,120,120))
+}
+gradient.Parent = bar
+
+-- brillo animado
+local shine = Instance.new("Frame")
+shine.Size = UDim2.fromScale(0.2,1)
+shine.BackgroundColor3 = Color3.fromRGB(255,255,255)
+shine.BackgroundTransparency = 0.8
+shine.BorderSizePixel = 0
+shine.Parent = bar
+
+Instance.new("UICorner", shine).CornerRadius = UDim.new(1,0)
+
+task.spawn(function()
+	while true do
+		shine.Position = UDim2.fromScale(-0.2,0)
+
+		TweenService:Create(shine, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {
+			Position = UDim2.fromScale(1.2,0)
+		}):Play()
+
+		task.wait(1.5)
+	end
+end)
 
 -- porcentaje
-local percent = Instance.new("TextLabel", bg)
+local percent = Instance.new("TextLabel")
 percent.Size = UDim2.fromScale(1,0.05)
 percent.Position = UDim2.fromScale(0,0.62)
 percent.BackgroundTransparency = 1
 percent.TextColor3 = Color3.fromRGB(180,180,255)
 percent.TextScaled = true
 percent.Text = "0%"
+percent.Parent = bg
 
--- loading fluido real
+-- loading fluido
 local function runLoading(duration,color)
 	bar.BackgroundColor3 = color
 	glow.Color = color
@@ -180,7 +233,10 @@ local function runLoading(duration,color)
 	end
 end
 
---// EJECUCIÓN
+--==================================================
+-- 🚀 EJECUCIÓN
+--==================================================
+
 typeText(title, loadingText1)
 runLoading(loadTime1, Color3.fromRGB(255,0,0))
 
